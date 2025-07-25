@@ -33,6 +33,7 @@ impl<'info> InitUser<'info>{
             buyer: self.buyer.key(), 
             buy_quote_amount,
             buy_token_amount,
+            has_claimed: false,
             buy_time,
             claim_amount,
             claim_time,

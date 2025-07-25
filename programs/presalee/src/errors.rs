@@ -14,6 +14,8 @@ pub enum PresaleError {
     PresaleNotStarted,
     #[msg("Presale already ended")]
     PresaleEnded,
+    #[msg("User already claimed")]
+    AlreadyClaimed,
     #[msg("Presale is live already")]
     AlreadyLive,
     #[msg("Token amount mismatch")]
@@ -24,6 +26,8 @@ pub enum PresaleError {
     PresaleNotEnded,
     #[msg("Presale already ended")]
     HardCapped,
+    #[msg("Presale soft cap not reached")]
+    SoftCapNotReached,
     #[msg("Amount exceeds available")]
     CalculationOverflow,
     #[msg("Cannot buy. Token limit exceeded")]
