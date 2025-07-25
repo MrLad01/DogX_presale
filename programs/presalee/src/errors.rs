@@ -23,5 +23,9 @@ pub enum PresaleError {
     #[msg("Presale not ended yet")]
     PresaleNotEnded,
     #[msg("Presale already ended")]
-    HardCapped
+    HardCapped,
+    #[msg("Amount exceeds available")]
+    CalculationOverflow,
+    #[msg("Cannot buy. Token limit exceeded")]
+    ExceedsDepositAmount
 }
