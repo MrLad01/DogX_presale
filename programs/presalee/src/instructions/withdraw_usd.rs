@@ -46,7 +46,7 @@ pub struct WithdrawUsd<'info> {
 }
 
 impl<'info> WithdrawUsd<'info>{
-    pub fn withdraw_usd(&mut self,) -> Result<()>{
+    pub fn withdraw_usd(&mut self) -> Result<()>{
     let presale = &mut self.presale;
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;
