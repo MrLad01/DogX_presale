@@ -48,6 +48,9 @@ impl <'info> DepositToken<'info> {
 
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
         transfer(cpi_ctx, amount)?;
+
+        self.presale.deposit_token_amount = self.presale.deposit_token_amount + amount;
+        
         Ok(())
     }
 }
