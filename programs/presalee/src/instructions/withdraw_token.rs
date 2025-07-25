@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;use anchor_lang::prelude::*;
+use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{transfer_checked, Mint, Token, TokenAccount, TransferChecked},
@@ -6,7 +6,7 @@ use anchor_spl::{
 
 use crate::{
     errors::PresaleError,
-    state::{Presale, UserInfo},
+    state::{Presale},
 };
 
 #[derive(Accounts)]

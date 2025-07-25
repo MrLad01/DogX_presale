@@ -6,7 +6,7 @@ use anchor_spl::{
 
 use crate::{
     errors::PresaleError,
-    state::{Presale, UserInfo},
+    state::{Presale},
 };
 
 #[derive(Accounts)]
