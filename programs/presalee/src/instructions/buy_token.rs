@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount, Transfer, transfer}};
+use anchor_spl::{associated_token::AssociatedToken,  token::{
+        Mint, TokenAccount, Token, TransferChecked, transfer_checked
+    },
+};
 
 use crate::{errors::PresaleError, state::{Presale, UserInfo}};
 
@@ -102,16 +105,18 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
 
     require!(remaining_payment == 0, PresaleError::InsufficientFund);
 
-    transfer(
+    transfer_checked(
         CpiContext::new(
             self.token_program.to_account_info(),
-            Transfer {
+            TransferChecked {
                 from: self.buyer_ata.to_account_info(),
+                mint: self.token_mint.to_account_info(),
                 to: self.vault.to_account_info(),
                 authority: self.buyer.to_account_info(),
             },
         ),
         payment,
+        self.token_mint.decimals
     )?;
 
     let user_contribution = &mut self.user;

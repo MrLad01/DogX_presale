@@ -1,13 +1,16 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token::{transfer, Mint, Token, TokenAccount, Transfer}};
 
-use crate::state::{Level, Presale};
+use crate::state::{Presale};
 
 #[derive(Accounts)]
 pub struct DepositToken<'info>{
     #[account(mut)]
     pub admin: Signer<'info>,
 
+    #[account(
+        address = presale.token_mint_address
+    )]
     pub token_mint: Account<'info, Mint>,
 
     #[account(
