@@ -28,7 +28,7 @@ pub struct InitUser<'info>{
 }
 
 impl<'info> InitUser<'info>{
-    pub fn init_user(&mut self, buy_quote_amount: u64, buy_token_amount: u64, buy_time: u64, claim_amount: u64, claim_time: u64,bumps: &InitUserBumps) -> Result<()>{
+    pub fn init_user(&mut self, buy_quote_amount: u64, buy_token_amount: u64, buy_time: u64, claim_amount: u64, claim_time: u64, bumps: &InitUserBumps) -> Result<()>{
         self.user_info.set_inner(UserInfo {
             buyer: self.buyer.key(), 
             buy_quote_amount,
