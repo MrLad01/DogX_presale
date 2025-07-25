@@ -46,7 +46,7 @@ pub struct WithdrawToken<'info> {
 }
 
 impl<'info> WithdrawToken<'info>{
-    pub fn withdraw_token(&mut self,) -> Result<()>{
+    pub fn withdraw_token(&mut self) -> Result<()>{
     let presale = &mut self.presale;
     let clock = Clock::get()?;
     let current_time = clock.unix_timestamp as u64;

@@ -23,6 +23,6 @@ impl<'info> EndPresale<'info>{
     require!(self.presale.is_live, PresaleError::PresaleEnded);
     //end presale
     self.presale.is_live = false;
-        Ok(())
+    Ok(())
     }
 }
