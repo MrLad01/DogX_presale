@@ -7,6 +7,7 @@ pub mod user_deposit;
 pub mod claim_token;
 pub mod withdraw_sol;
 pub mod withdraw_token;
+pub mod end_presale;
 
 pub use init_presale::*;
 pub use deposit_token::*;
@@ -17,3 +18,4 @@ pub use user_deposit::*;
 pub use claim_token::*;
 pub use withdraw_sol::*;
 pub use withdraw_token::*;
+pub use end_presale::*;
