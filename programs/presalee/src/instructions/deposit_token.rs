@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token::{transfer, Mint, Token, TokenAccount, Transfer}};
 
-use crate::state::{Presale};
+use crate::state::Presale;
 
 #[derive(Accounts)]
 pub struct DepositToken<'info>{

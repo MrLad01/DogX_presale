@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::UserInfo;
+use crate::state::{Presale, UserInfo};
 
 
 #[derive(Accounts)]
@@ -9,9 +9,16 @@ pub struct InitUser<'info>{
     pub buyer: Signer<'info>,
 
     #[account(
+        mut,
+        seeds = [b"dogx_presale", presale.admin.key().as_ref()],
+        bump = presale.bump,
+    )]
+    pub presale: Account<'info, Presale>,
+
+    #[account(
         init,
         payer = buyer,
-        seeds = [b"user", buyer.key().as_ref()],
+        seeds = [b"user",  presale.key().as_ref(), buyer.key().as_ref()],
         space = 8 + UserInfo::INIT_SPACE,
         bump,
     )]
