@@ -8,6 +8,9 @@ pub struct DepositToken<'info>{
     #[account(mut)]
     pub admin: Signer<'info>,
 
+    #[account(
+        address = presale.token_mint_address
+    )]
     pub token_mint: Account<'info, Mint>,
 
     #[account(
