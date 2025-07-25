@@ -1,5 +1,6 @@
 pub mod init_presale;
 pub mod deposit_token;
+pub mod buy_token;
 pub mod start_presale;
 pub mod init_user;
 pub mod user_deposit;
@@ -9,6 +10,7 @@ pub mod withdraw_token;
 
 pub use init_presale::*;
 pub use deposit_token::*;
+pub use buy_token::*;
 pub use start_presale::*;
 pub use init_user::*;
 pub use user_deposit::*;

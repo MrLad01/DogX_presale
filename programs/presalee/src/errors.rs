@@ -14,6 +14,8 @@ pub enum PresaleError {
     PresaleNotStarted,
     #[msg("Presale already ended")]
     PresaleEnded,
+    #[msg("Presale is live already")]
+    AlreadyLive,
     #[msg("Token amount mismatch")]
     TokenAmountMismatch,
     #[msg("Insufficient Tokens")]
