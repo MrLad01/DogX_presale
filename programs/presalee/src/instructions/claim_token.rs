@@ -67,7 +67,7 @@ impl<'info> ClaimToken<'info> {
         require!(!self.user.has_claimed, PresaleError::AlreadyClaimed);
 
         let seeds = &[
-            &b"presale"[..],
+            &b"dogx_presale"[..],
             &self.presale.seed.to_le_bytes(),
             &[self.presale.bump],
         ];
