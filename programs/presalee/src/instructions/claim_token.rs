@@ -80,7 +80,7 @@ impl<'info> ClaimToken<'info> {
                 from: self.vault_dog.to_account_info(),
                 mint: self.token_mint_address.to_account_info(),
                 to: self.buyer_ata.to_account_info(),
-                authority: self.buyer.to_account_info(),
+                authority: self.presale.to_account_info(),
             },
             signers_seeds,
         ),
