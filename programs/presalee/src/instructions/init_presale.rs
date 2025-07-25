@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{};
+// use anchor_spl::{};
 
-use crate::state::Presale;
+use crate::state::{Level, Presale};
 
 #[derive(Accounts)]
 pub struct InitPresale<'info>{
@@ -32,24 +32,23 @@ impl<'info> InitPresale<'info>{
     softcap_amount: u64,
     hardcap_amount: u64,
     deposit_token_amount: u64,
+    levels: [Level; 7], 
     sold_token_amount: u64,
     start_time: u64,
     end_time: u64,
-    max_token_amount_per_address: u64,
-    price_per_token: u64,
     bumps: &InitPresaleBumps
 ) -> Result<()>{
     self.presale.set_inner(Presale { 
         admin: self.admin.key(),
         token_mint_address,
+        current_level: 0,
         softcap_amount,
         hardcap_amount,
         deposit_token_amount,
         sold_token_amount,
         start_time,
         end_time,
-        max_token_amount_per_address,
-        price_per_token,
+        levels,
         is_live: false,
         is_soft_capped: false,
         is_hard_capped: false,
