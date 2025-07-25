@@ -60,9 +60,9 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
     let mut remaining_payment = payment;
     let mut tokens_bought = 0;
 
-    let current_level = presale.current_level as usize;
-
+    
     while remaining_payment > 0 && (presale.current_level as usize) < presale.levels.len() {
+        let current_level = presale.current_level as usize;
         let level_price = presale.levels[current_level].price;
         let level_token_amount = presale.levels[current_level].token_amount;
         let level_tokens_sold = presale.levels[current_level].tokens_sold;
@@ -71,10 +71,6 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
             presale.current_level += 1;
             continue;
         }
-        require!(
-            presale.sold_token_amount + tokens_bought <= presale.deposit_token_amount,
-            PresaleError::ExceedsDepositAmount
-        );
 
         if presale.levels[current_level].tokens_sold == level_token_amount {
             presale.current_level += 1;
@@ -94,25 +90,26 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
         
 
         require!(
-            presale.sold_token_amount + cost as u64 <= presale.hardcap_amount,
+            presale.sold_token_amount + cost <= presale.hardcap_amount,
             PresaleError::HardCapped
         );
 
         presale.levels[current_level].tokens_sold += tokens_to_buy;
-        // presale.sold_token_amount += cost as u64;
-        presale.sold_token_amount += tokens_bought;
+        presale.sold_token_amount += cost as u64;
+        // presale.sold_token_amount += tokens_bought;
         remaining_payment -= cost as u64;
         tokens_bought += tokens_to_buy;
 
-        if level_tokens_sold >= level_token_amount {
-            presale.current_level += 1;
-        }
-
         presale.is_soft_capped = presale.sold_token_amount >= presale.softcap_amount;
         presale.is_hard_capped = presale.sold_token_amount >= presale.hardcap_amount;
+
+        require!(
+            presale.sold_token_amount + tokens_bought <= presale.deposit_token_amount,
+            PresaleError::ExceedsDepositAmount
+        );
     }
 
-    require!(remaining_payment == 0, PresaleError::InsufficientFund);
+    require!(remaining_payment == 0, PresaleError::ExactPaymentRequired);
 
     transfer_checked(
         CpiContext::new(
