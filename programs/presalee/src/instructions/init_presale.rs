@@ -44,6 +44,7 @@ pub struct InitPresale<'info>{
 impl<'info> InitPresale<'info>{
     pub fn init_presale(
     &mut self,   
+    seed: u64,
     token_mint_address: Pubkey,
     usd_mint: Pubkey,
     softcap_amount: u64,
@@ -55,7 +56,8 @@ impl<'info> InitPresale<'info>{
     end_time: u64,
     bumps: &InitPresaleBumps
 ) -> Result<()>{
-    self.presale.set_inner(Presale { 
+    self.presale.set_inner(Presale {
+        seed, 
         admin: self.admin.key(),
         token_mint_address,
         usd_mint,

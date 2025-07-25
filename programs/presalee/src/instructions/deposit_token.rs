@@ -8,28 +8,28 @@ pub struct DepositToken<'info>{
     #[account(mut)]
     pub admin: Signer<'info>,
 
-    #[account(
-        address = presale.token_mint_address
-    )]
-    pub token_mint: Account<'info, Mint>,
+    pub usd_mint: Account<'info, Mint>,
+    pub token_mint_address: Account<'info, Mint>,
 
     #[account(
         mut,
-        associated_token::mint = token_mint,
+        associated_token::mint = token_mint_address,
         associated_token::authority = admin
     )]
     pub admin_ata: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        associated_token::mint = token_mint,
+        associated_token::mint = token_mint_address,
         associated_token::authority = presale
     )]
-    pub presale_ata: Account<'info, TokenAccount>,
+    pub vault_dog: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"dogx_presale", admin.key().as_ref()],
+        has_one = token_mint_address,
+        has_one = usd_mint,
+        seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
         bump = presale.bump
     )]
     pub presale: Account<'info, Presale>,
@@ -45,7 +45,7 @@ impl <'info> DepositToken<'info> {
 
         let cpi_accounts = Transfer{
             from : self.admin_ata.to_account_info(),
-            to: self.presale_ata.to_account_info(),
+            to: self.vault_dog.to_account_info(),
             authority: self.admin.to_account_info() 
         };
 

@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct Presale{
+    pub seed: u64,
     // Authority of the presale
     pub admin: Pubkey,
     // Presale is buyable

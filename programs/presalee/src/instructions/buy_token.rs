@@ -10,20 +10,29 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
  pub struct BuyToken <'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
-    pub token_mint: Account<'info, Mint>,
-    #[account(mut)]
+    pub token_mint_address: Account<'info, Mint>,
+    pub usd_mint: Account<'info, Mint>,
+
+    #[account(
+        mut,
+        has_one = token_mint_address,
+        has_one = usd_mint,
+        seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
+        bump = presale.bump
+    )]
     pub presale: Account<'info, Presale>,
     #[account(
         mut,
-        associated_token::mint = token_mint,
+        associated_token::mint = usd_mint,
         associated_token::authority = buyer
     )]
     pub buyer_ata: Account<'info, TokenAccount>,
-    #[account(
-        seeds = [b"dogx_vault", presale.key().as_ref()],
-        bump
+     #[account(
+        mut,
+        associated_token::mint = usd_mint,
+        associated_token::authority = presale
     )]
-    pub vault: SystemAccount<'info>,
+    pub vault_usd: Account<'info, TokenAccount>,
     #[account(
         init_if_needed,
         payer = buyer,
@@ -110,13 +119,13 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
             self.token_program.to_account_info(),
             TransferChecked {
                 from: self.buyer_ata.to_account_info(),
-                mint: self.token_mint.to_account_info(),
-                to: self.vault.to_account_info(),
+                mint: self.usd_mint.to_account_info(),
+                to: self.vault_usd.to_account_info(),
                 authority: self.buyer.to_account_info(),
             },
         ),
         payment,
-        self.token_mint.decimals
+        self.usd_mint.decimals
     )?;
 
     let user_contribution = &mut self.user;
