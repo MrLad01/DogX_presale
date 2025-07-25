@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken,  token::{
+use anchor_spl::{associated_token::AssociatedToken, token::{
         Mint, TokenAccount, Token, TransferChecked, transfer_checked
     },
 };
