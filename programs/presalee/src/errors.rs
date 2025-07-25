@@ -27,5 +27,7 @@ pub enum PresaleError {
     #[msg("Amount exceeds available")]
     CalculationOverflow,
     #[msg("Cannot buy. Token limit exceeded")]
-    ExceedsDepositAmount
+    ExceedsDepositAmount,
+    #[msg("Exact payment required")]
+    ExactPaymentRequired
 }
