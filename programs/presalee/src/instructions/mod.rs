@@ -14,7 +14,6 @@ pub use deposit_token::*;
 pub use buy_token::*;
 pub use start_presale::*;
 pub use init_user::*;
-pub use user_deposit::*;
 pub use claim_token::*;
 pub use withdraw_usd::*;
 pub use withdraw_token::*;
