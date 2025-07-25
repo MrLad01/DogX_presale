@@ -15,6 +15,8 @@ pub struct Presale{
     pub sold_token_amount: u64,
     // Mint address of the presale token (DGX)
     pub token_mint_address: Pubkey,
+    // Mint address of USDT
+    pub usd_mint: Pubkey,
     // Softcap (Minimum funds required)
     pub softcap_amount: u64,
     // Hardcap (Maximum funds to raise)
@@ -30,9 +32,7 @@ pub struct Presale{
     // Status of hardcapped
     pub is_hard_capped: bool,
     // PDA bump
-    pub bump: u8,
-    // treasury bump
-    pub vault_bump: u8
+    pub bump: u8
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
