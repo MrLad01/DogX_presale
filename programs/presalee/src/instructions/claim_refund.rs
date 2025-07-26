@@ -7,7 +7,7 @@ use anchor_spl::{associated_token::AssociatedToken, token::{
 use crate::{errors::PresaleError, state::{Presale, UserInfo}};
 
 #[derive(Accounts)]
- pub struct ClaimRefund <'info> {
+ pub struct ClaimRefund<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
     pub token_mint_address: Account<'info, Mint>,

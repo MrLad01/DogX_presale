@@ -3,11 +3,11 @@ pub mod deposit_token;
 pub mod buy_token;
 pub mod start_presale;
 pub mod init_user;
-pub mod claim_refund;
 pub mod claim_token;
 pub mod withdraw_usd;
 pub mod withdraw_token;
 pub mod end_presale;
+pub mod claim_refund;
 
 pub use init_presale::*;
 pub use deposit_token::*;
@@ -18,3 +18,4 @@ pub use claim_token::*;
 pub use withdraw_usd::*;
 pub use withdraw_token::*;
 pub use end_presale::*;
+pub use claim_refund::*;

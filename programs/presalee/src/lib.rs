@@ -76,8 +76,9 @@ pub mod presalee {
         Ok(())
     }
 
-
+    pub fn refund(ctx: Context<ClaimRefund>) -> Result<()>{
+        ctx.accounts.claim_refund()?;
+        Ok(())
+    }
 }
 
-#[derive(Accounts)]
-pub struct Initialize {}
