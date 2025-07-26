@@ -57,8 +57,8 @@ pub mod presalee {
         Ok(())
     }
 
-    pub fn claim_token(ctx: Context<ClaimToken>, amount: u64) -> Result<()> {
-        ctx.accounts.claim_token(amount)?;
+    pub fn claim_token(ctx: Context<ClaimToken>,) -> Result<()> {
+        ctx.accounts.claim_token()?;
         Ok(())
     }
 

@@ -36,7 +36,8 @@ pub struct WithdrawToken<'info> {
         has_one = token_mint_address,
         has_one = usd_mint,
         seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
-        bump = presale.bump
+        bump = presale.bump,
+        close = admin
     )]
     pub presale: Account<'info, Presale>,
 

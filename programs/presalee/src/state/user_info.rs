@@ -9,8 +9,10 @@ pub struct UserInfo{
     pub buy_quote_amount: u64,
     // Buy token amount
     pub buy_token_amount: u64,
-    // user has claimed
-    pub has_claimed: bool,
+    // user has claimed token
+    pub has_claimed_token: bool,
+    // user has claimed token
+    pub has_claimed_refund: bool,
     // Buy time
     pub buy_time: u64,
     // claim amount

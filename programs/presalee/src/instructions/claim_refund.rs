@@ -1,35 +1,17 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{transfer_checked, Mint, Token, TokenAccount, TransferChecked},
+use anchor_spl::{associated_token::AssociatedToken, token::{
+        Mint, TokenAccount, Token, TransferChecked, transfer_checked
+    },
 };
 
-use crate::{
-    errors::PresaleError,
-    state::{Presale, UserInfo},
-};
+use crate::{errors::PresaleError, state::{Presale, UserInfo}};
 
 #[derive(Accounts)]
-pub struct ClaimToken<'info> {
+ pub struct ClaimRefund <'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
-
-    pub usd_mint: Account<'info, Mint>,
     pub token_mint_address: Account<'info, Mint>,
-
-    #[account(
-        mut,
-        associated_token::mint = token_mint_address,
-        associated_token::authority = buyer
-    )]
-    pub buyer_ata: Account<'info, TokenAccount>,
-
-    #[account(
-        mut,
-        associated_token::mint = token_mint_address,
-        associated_token::authority = presale
-    )]
-    pub vault_dog: Account<'info, TokenAccount>,
+    pub usd_mint: Account<'info, Mint>,
 
     #[account(
         mut,
@@ -39,20 +21,35 @@ pub struct ClaimToken<'info> {
         bump = presale.bump
     )]
     pub presale: Account<'info, Presale>,
-
     #[account(
+        mut,
+        associated_token::mint = usd_mint,
+        associated_token::authority = buyer
+    )]
+    pub buyer_ata: Account<'info, TokenAccount>,
+     #[account(
+        mut,
+        associated_token::mint = usd_mint,
+        associated_token::authority = presale
+    )]
+    pub vault_usd: Account<'info, TokenAccount>,
+    #[account(
+        init_if_needed,
+        payer = buyer,
+        space = 8 + UserInfo::INIT_SPACE,
         seeds = [b"user", presale.key().as_ref(), buyer.key().as_ref() ],
-        bump = user.bump
+        bump
     )]
     pub user: Account<'info, UserInfo>,
 
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
-}
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub token_program: Program<'info, Token>
 
-impl<'info> ClaimToken<'info> {
-    pub fn claim_token(&mut self,) -> Result<()> {
+ }
+
+ impl<'info> ClaimRefund<'info>{
+    pub fn claim_refund(&mut self) -> Result<()>{
         let presale = &mut self.presale;
         let clock = Clock::get()?;
         let current_time = clock.unix_timestamp as u64;
@@ -60,13 +57,13 @@ impl<'info> ClaimToken<'info> {
         require!(is_ended, PresaleError::PresaleNotEnded);
 
         require!(
-            presale.sold_token_amount >= presale.softcap_amount,
-            PresaleError::SoftCapNotReached
+            presale.sold_token_amount < presale.softcap_amount,
+            PresaleError::SoftCapReached
         );
 
-        let amount = self.user.claim_amount;
+        require!(!self.user.has_claimed_refund, PresaleError::AlreadyClaimed);
 
-        require!(!self.user.has_claimed_token, PresaleError::AlreadyClaimed);
+        let refund_amount = self.user.buy_token_amount;
 
         let seeds = &[
             &b"dogx_presale"[..],
@@ -79,20 +76,18 @@ impl<'info> ClaimToken<'info> {
         CpiContext::new_with_signer(
             self.token_program.to_account_info(),
             TransferChecked {
-                from: self.vault_dog.to_account_info(),
-                mint: self.token_mint_address.to_account_info(),
+                from: self.vault_usd.to_account_info(),
+                mint: self.usd_mint.to_account_info(),
                 to: self.buyer_ata.to_account_info(),
                 authority: self.presale.to_account_info(),
             },
             signers_seeds,
         ),
-        amount,
+        refund_amount,
         self.token_mint_address.decimals
     )?;
 
-    self.user.has_claimed_token = true;
-
-
+        self.user.has_claimed_refund = true;
         Ok(())
     }
-}
+ }

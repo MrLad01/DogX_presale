@@ -11,6 +11,7 @@ pub struct EndPresale<'info>{
         mut,
         seeds = [b"dogx_presale", admin.key().as_ref()],
         bump = presale.bump,
+        close = admin
     )]
     pub presale: Account<'info, Presale>,
 

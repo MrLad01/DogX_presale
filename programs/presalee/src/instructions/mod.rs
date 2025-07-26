@@ -3,7 +3,7 @@ pub mod deposit_token;
 pub mod buy_token;
 pub mod start_presale;
 pub mod init_user;
-pub mod user_deposit;
+pub mod claim_refund;
 pub mod claim_token;
 pub mod withdraw_usd;
 pub mod withdraw_token;

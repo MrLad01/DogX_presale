@@ -28,6 +28,8 @@ pub enum PresaleError {
     HardCapped,
     #[msg("Presale soft cap not reached")]
     SoftCapNotReached,
+    #[msg("Presale soft cap reached")]
+    SoftCapReached,
     #[msg("Amount exceeds available")]
     CalculationOverflow,
     #[msg("Cannot buy. Token limit exceeded")]
