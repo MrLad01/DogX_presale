@@ -66,7 +66,7 @@ describe("presalee", () => {
     user = Keypair.generate();
 
     // Airdrop SOL to accounts
-    await provider.connection.requestAirdrop(authority.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL);
+    // await provider.connection.requestAirdrop(authority.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL)
     await provider.connection.requestAirdrop(user.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL);
     
     // Wait for airdrops to confirm
