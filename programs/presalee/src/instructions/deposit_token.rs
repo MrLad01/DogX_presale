@@ -54,7 +54,7 @@ impl <'info> DepositToken<'info> {
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
         transfer_checked(cpi_ctx, amount, self.token_mint_address.decimals)?;
 
-        self.presale.deposit_token_amount += amount;
+        self.presale.deposit_token_amount = amount;
         
         Ok(())
     }

@@ -10,19 +10,22 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
  pub struct ClaimRefund<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
+    /// CHECK : FY
+    pub admin: AccountInfo<'info>,
+
     pub token_mint_address: Account<'info, Mint>,
     pub usd_mint: Account<'info, Mint>,
 
     #[account(
-        init_if_needed,
-        payer = buyer,
+        mut,
         has_one = token_mint_address,
         has_one = usd_mint,
-        // seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
-        // bump,
-        space = Presale::INIT_SPACE + UserInfo::INIT_SPACE
+        has_one = admin,
+        seeds = [b"dogx_presale", presale.admin.key().as_ref(), presale.seed.to_le_bytes().as_ref()],
+        bump = presale.bump,
     )]
     pub presale: Account<'info, Presale>,
+
     #[account(
         mut,
         associated_token::mint = usd_mint,
@@ -40,7 +43,7 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
         payer = buyer,
         space = 8 + UserInfo::INIT_SPACE,
         seeds = [b"user", presale.key().as_ref(), buyer.key().as_ref() ],
-        bump
+        bump,
     )]
     pub user: Account<'info, UserInfo>,
 
@@ -67,8 +70,10 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
 
         let refund_amount = self.user.buy_token_amount;
 
+        let binding = self.presale.admin.key();
         let seeds = &[
             &b"dogx_presale"[..],
+            &binding.as_ref(),
             &self.presale.seed.to_le_bytes(),
             &[self.presale.bump],
         ];

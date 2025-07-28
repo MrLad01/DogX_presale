@@ -42,8 +42,10 @@ pub struct ClaimToken<'info> {
     pub presale: Account<'info, Presale>,
 
     #[account(
+        mut,
         seeds = [b"user", presale.key().as_ref(), buyer.key().as_ref() ],
-        bump = user.bump
+        bump = user.bump,
+        close = buyer
     )]
     pub user: Account<'info, UserInfo>,
 
@@ -69,8 +71,10 @@ impl<'info> ClaimToken<'info> {
 
         require!(!self.user.has_claimed_token, PresaleError::AlreadyClaimed);
 
+        let binding = self.presale.admin.key();
         let seeds = &[
             &b"dogx_presale"[..],
+            &binding.as_ref(),
             &self.presale.seed.to_le_bytes(),
             &[self.presale.bump],
         ];

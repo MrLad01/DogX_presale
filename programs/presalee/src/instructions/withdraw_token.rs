@@ -32,15 +32,14 @@ pub struct WithdrawToken<'info> {
     )]
     pub vault_dog: Account<'info, TokenAccount>,
 
+    
     #[account(
-        init_if_needed,
-        payer = admin,
-        space = 8 + Presale::INIT_SPACE,
+        mut,
         has_one = token_mint_address,
         has_one = usd_mint,
-        // seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
-        // bump,
-        // close = admin
+        has_one = admin,
+        seeds = [b"dogx_presale", admin.key().as_ref(), presale.seed.to_le_bytes().as_ref()],
+        bump = presale.bump,
     )]
     pub presale: Account<'info, Presale>,
 
@@ -64,8 +63,10 @@ impl<'info> WithdrawToken<'info>{
 
         let amount = presale.sold_token_amount;
 
+        let binding = self.presale.admin.key();
          let seeds = &[
             &b"dogx_presale"[..],
+            &binding.as_ref(),
             &self.presale.seed.to_le_bytes(),
             &[self.presale.bump],
         ];

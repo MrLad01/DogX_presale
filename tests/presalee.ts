@@ -46,7 +46,7 @@ describe("presalee", () => {
   const seedBytes = seed.toArrayLike(Buffer, 'le', 8);
   const softcapAmount = new anchor.BN(1000 * 10**6); // 1000 tokens (6 decimals)
   const hardcapAmount = new anchor.BN(10000 * 10**6); // 10000 tokens
-  const depositTokenAmount = new anchor.BN(15000 * 10**6); // 15000 tokens
+  const depositTokenAmount = new anchor.BN(14000 * 10**6); // 15000 tokens
   const soldTokenAmount = new anchor.BN(0);
   const startTime = new anchor.BN(Math.floor(Date.now() / 1000));
   const endTime = new anchor.BN(Math.floor(Date.now() / 1000) + 3600 * 24 * 7); // 1 week
@@ -126,11 +126,11 @@ describe("presalee", () => {
     );
 
    userTokenAccount = await createAssociatedTokenAccount(
-  provider.connection,
-  user,
-  tokenMint,
-  user.publicKey
-);
+      provider.connection,
+      user,
+      tokenMint,
+      user.publicKey
+    );
 
     // Mint tokens to authority
     await mintTo(

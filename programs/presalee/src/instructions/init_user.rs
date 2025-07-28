@@ -16,7 +16,7 @@ pub struct InitUser<'info>{
     pub presale: Account<'info, Presale>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = buyer,
         seeds = [b"user",  presale.key().as_ref(), buyer.key().as_ref()],
         space = 8 + UserInfo::INIT_SPACE,
