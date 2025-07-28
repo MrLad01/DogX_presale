@@ -15,6 +15,7 @@ import {
 import { expect } from "chai";
 
 import adminSecretArray from "./wallets/wallet.json";
+import userSecretArray from "./wallets/wallet2.json";
 
 describe("presalee", () => {
   // Configure the client to use the local cluster
@@ -42,9 +43,10 @@ describe("presalee", () => {
   
   // Test parameters
   const seed = new anchor.BN(12345);
+  const seedBytes = seed.toArrayLike(Buffer, 'le', 8);
   const softcapAmount = new anchor.BN(1000 * 10**6); // 1000 tokens (6 decimals)
   const hardcapAmount = new anchor.BN(10000 * 10**6); // 10000 tokens
-  const depositTokenAmount = new anchor.BN(15000 * 10**6); // 15000 tokens
+  const depositTokenAmount = new anchor.BN(30000 * 10**6); // 15000 tokens
   const soldTokenAmount = new anchor.BN(0);
   const startTime = new anchor.BN(Math.floor(Date.now() / 1000));
   const endTime = new anchor.BN(Math.floor(Date.now() / 1000) + 3600 * 24 * 7); // 1 week
@@ -63,14 +65,26 @@ describe("presalee", () => {
   before(async () => {
     // Generate keypairs
     authority = Keypair.fromSecretKey(Uint8Array.from(adminSecretArray));
-    user = Keypair.generate();
+    user = Keypair.fromSecretKey(Uint8Array.from(userSecretArray));
+    // user = Keypair.generate();
 
     // Airdrop SOL to accounts
     // await provider.connection.requestAirdrop(authority.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL)
-    await provider.connection.requestAirdrop(user.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL);
+    // await provider.connection.requestAirdrop(user.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL);
     
     // Wait for airdrops to confirm
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log("Authority public key:", authority.publicKey.toBase58());
+    console.log("User public key:", user.publicKey.toBase58());
+
+    const authorityBalance = await provider.connection.getBalance(authority.publicKey);
+    console.log("Authority balance:", authorityBalance / anchor.web3.LAMPORTS_PER_SOL, "SOL");
+    const userBalance = await provider.connection.getBalance(user.publicKey);
+    console.log("User balance:", userBalance / anchor.web3.LAMPORTS_PER_SOL, "SOL");
+    if (authorityBalance < 0.1 * anchor.web3.LAMPORTS_PER_SOL) {
+        throw new Error("Authority account has insufficient SOL");
+    }
 
     // Create token mints
     tokenMint = await createMint(
@@ -140,7 +154,7 @@ describe("presalee", () => {
 
     // Derive presale PDA with correct seeds
     [presalePda] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("dogx_presale"), authority.publicKey.toBuffer()],
+      [Buffer.from("dogx_presale"), authority.publicKey.toBuffer(), seedBytes],
       program.programId
     );
 

@@ -25,7 +25,8 @@ pub struct ClaimToken<'info> {
     pub buyer_ata: Account<'info, TokenAccount>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = buyer,
         associated_token::mint = token_mint_address,
         associated_token::authority = presale
     )]
@@ -35,7 +36,7 @@ pub struct ClaimToken<'info> {
         mut,
         has_one = token_mint_address,
         has_one = usd_mint,
-        seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
+        seeds = [b"dogx_presale", presale.admin.key().as_ref(), presale.seed.to_le_bytes().as_ref()],
         bump = presale.bump
     )]
     pub presale: Account<'info, Presale>,

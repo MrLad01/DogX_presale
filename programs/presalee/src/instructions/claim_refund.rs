@@ -14,11 +14,13 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
     pub usd_mint: Account<'info, Mint>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = buyer,
         has_one = token_mint_address,
         has_one = usd_mint,
-        seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
-        bump = presale.bump
+        // seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
+        // bump,
+        space = Presale::INIT_SPACE + UserInfo::INIT_SPACE
     )]
     pub presale: Account<'info, Presale>,
     #[account(

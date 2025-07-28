@@ -32,11 +32,13 @@ pub struct WithdrawUsd<'info> {
     pub vault_usd: Account<'info, TokenAccount>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = admin,
+        space = 8 + Presale::INIT_SPACE,
         has_one = token_mint_address,
         has_one = usd_mint,
-        seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
-        bump = presale.bump
+        // seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
+        // bump = presale.bump
     )]
     pub presale: Account<'info, Presale>,
 

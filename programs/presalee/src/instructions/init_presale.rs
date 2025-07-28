@@ -4,6 +4,7 @@ use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAc
 use crate::state::{Level, Presale};
 
 #[derive(Accounts)]
+#[instruction(seed: u64)]
 pub struct InitPresale<'info>{
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -14,7 +15,7 @@ pub struct InitPresale<'info>{
     #[account(
         init,
         payer = admin,
-        seeds = [b"dogx_presale", admin.key().as_ref()],
+        seeds = [b"dogx_presale", admin.key().as_ref(), seed.to_le_bytes().as_ref()],
         space = 8 + Presale::INIT_SPACE,
         bump,
     )]

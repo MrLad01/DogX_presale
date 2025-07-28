@@ -9,7 +9,7 @@ pub struct StartPresale<'info> {
     
     #[account(
         mut,
-        seeds = [b"dogx_presale", admin.key().as_ref()],
+        seeds = [b"dogx_presale", presale.admin.key().as_ref(), presale.seed.to_le_bytes().as_ref()],
         bump = presale.bump,
         has_one = admin,
     )]

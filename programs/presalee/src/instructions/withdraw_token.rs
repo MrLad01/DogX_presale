@@ -25,19 +25,22 @@ pub struct WithdrawToken<'info> {
     pub admin_ata: Account<'info, TokenAccount>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = admin,
         associated_token::mint = token_mint_address,
         associated_token::authority = presale
     )]
     pub vault_dog: Account<'info, TokenAccount>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = admin,
+        space = 8 + Presale::INIT_SPACE,
         has_one = token_mint_address,
         has_one = usd_mint,
-        seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
-        bump = presale.bump,
-        close = admin
+        // seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
+        // bump,
+        // close = admin
     )]
     pub presale: Account<'info, Presale>,
 

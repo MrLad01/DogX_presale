@@ -17,7 +17,7 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
         mut,
         has_one = token_mint_address,
         has_one = usd_mint,
-        seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
+        seeds = [b"dogx_presale", presale.admin.key().as_ref(), presale.seed.to_le_bytes().as_ref()],
         bump = presale.bump
     )]
     pub presale: Account<'info, Presale>,
@@ -28,7 +28,8 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
     )]
     pub buyer_ata: Account<'info, TokenAccount>,
      #[account(
-        mut,
+        init_if_needed,
+        payer = buyer,
         associated_token::mint = usd_mint,
         associated_token::authority = presale
     )]
@@ -109,7 +110,7 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
         );
     }
 
-    require!(remaining_payment == 0, PresaleError::ExactPaymentRequired);
+    require!(remaining_payment != 0, PresaleError::ExactPaymentRequired);
 
     transfer_checked(
         CpiContext::new(

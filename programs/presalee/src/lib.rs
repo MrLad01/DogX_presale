@@ -8,7 +8,7 @@ pub mod errors;
 use instructions::*;
 use state::*;
 
-declare_id!("5H6UN9eQMkVU7MgubiMejfCHByD9gGXiBtqvB9ys8K8m");
+declare_id!("EW33z8JRPAUWC51rkrACUqcnPZtsKUigvMeXgsNULAau");
 
 #[program]
 pub mod presalee {

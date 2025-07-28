@@ -19,7 +19,8 @@ pub struct DepositToken<'info>{
     pub admin_ata: Account<'info, TokenAccount>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = admin,
         associated_token::mint = token_mint_address,
         associated_token::authority = presale
     )]
@@ -29,7 +30,7 @@ pub struct DepositToken<'info>{
         mut,
         has_one = token_mint_address,
         has_one = usd_mint,
-        seeds = [b"dogx_presale", presale.seed.to_le_bytes().as_ref()],
+        seeds = [b"dogx_presale", admin.key().as_ref(), presale.seed.to_le_bytes().as_ref()],
         bump = presale.bump
     )]
     pub presale: Account<'info, Presale>,
