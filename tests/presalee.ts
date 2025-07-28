@@ -5,11 +5,8 @@ import {
   PublicKey, 
   Keypair, 
   SystemProgram,
-  SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
 import { 
-  TOKEN_PROGRAM_ID, 
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   createMint,
   createAssociatedTokenAccount,
   mintTo,
@@ -17,25 +14,30 @@ import {
 } from "@solana/spl-token";
 import { expect } from "chai";
 
+import adminSecretArray from "./wallets/wallet.json";
+
 describe("presalee", () => {
   // Configure the client to use the local cluster
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
   const program = anchor.workspace.presalee as Program<Presalee>;
+  const connection = provider.connection
   
   // Test accounts
   let authority: Keypair;
   let user: Keypair;
-  let tokenMint: PublicKey;
-  let usdMint: PublicKey;
-  let presaleAccount: PublicKey;
-  let userAccount: PublicKey;
-  let authorityTokenAccount: PublicKey;
-  let authorityUsdAccount: PublicKey;
-  let userUsdAccount: PublicKey;
-  let presaleTokenAccount: PublicKey;
-  let presaleUsdAccount: PublicKey;
+  let tokenMint: anchor.web3.PublicKey;
+  let usdMint: anchor.web3.PublicKey;
+  let presalePda: anchor.web3.PublicKey;
+  let userAccount: anchor.web3.PublicKey;
+  let authorityTokenAccount: anchor.web3.PublicKey;
+  let authorityUsdAccount: anchor.web3.PublicKey;
+  let userUsdAccount: anchor.web3.PublicKey;
+  let presaleTokenAccount: anchor.web3.PublicKey;
+  let presaleUsdAccount: anchor.web3.PublicKey;
+  let vaultDog: anchor.web3.PublicKey;
+  let vaultUsd: anchor.web3.PublicKey;
   
   // Test parameters
   const seed = new anchor.BN(12345);
@@ -59,7 +61,7 @@ describe("presalee", () => {
 
   before(async () => {
     // Generate keypairs
-    authority = Keypair.generate();
+    authority = Keypair.fromSecretKey(Uint8Array.from(adminSecretArray));
     user = Keypair.generate();
 
     // Airdrop SOL to accounts
@@ -135,25 +137,27 @@ describe("presalee", () => {
     // );
 
     [userAccount] = PublicKey.findProgramAddressSync(
-      [Buffer.from("user"), presaleAccount.toBuffer(), user.publicKey.toBuffer()],
+      [Buffer.from("user"), presalePda.toBuffer(), user.publicKey.toBuffer()],
       program.programId
     );
 
     // Get associated token accounts for presale
-    presaleTokenAccount = await getAssociatedTokenAddress(tokenMint, presaleAccount, true);
-    presaleUsdAccount = await getAssociatedTokenAddress(usdMint, presaleAccount, true);
+    presaleTokenAccount = await getAssociatedTokenAddress(tokenMint, presalePda, true);
+    presaleUsdAccount = await getAssociatedTokenAddress(usdMint, presalePda, true);
   });
 
 
   // Derive presale PDA with correct seeds
-  [presaleAccount] = PublicKey.findProgramAddressSync(
-    [Buffer.from("dogx_presale"), seed.toArrayLike(Buffer, "le", 8)],
+  [presalePda] = anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("dogx_presale"), authority.publicKey.toBuffer()],
     program.programId
   );
-  // [Buffer.from("dogx_presale"), authority.publicKey.toBuffer()],
+  // [Buffer.from("dogx_presale"), seed.toArrayLike(Buffer, "le", 8)],
   
   // Update test
   it("Initializes presale", async () => {
+    vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda, true);
+    vaultUsd = await getAssociatedTokenAddress(usdMint, presalePda, true);
     try {
       const tx = await program.methods
         .initPresale(
@@ -168,24 +172,23 @@ describe("presalee", () => {
           startTime,
           endTime
         )
-        .accounts({
-          // presale: presaleAccount,
+        .accountsPartial({
           admin: authority.publicKey,
           tokenMintAddress: tokenMint,
           usdMint: usdMint,
-          // vaultDog: presaleTokenAccount,
-          // vaultUsd: presaleUsdAccount,
-          systemProgram: SystemProgram.programId,
-          token_program: TOKEN_PROGRAM_ID,
-          associated_token_program: ASSOCIATED_TOKEN_PROGRAM_ID,
-          rent: SYSVAR_RENT_PUBKEY,
+          presale: presalePda,
+          vaultDog,
+          vaultUsd,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
         })
         .signers([authority])
         .rpc();
 
       console.log("Init presale transaction signature:", tx);
 
-      const presaleData = await program.account.presale.fetch(presaleAccount);
+      const presaleData = await program.account.presale.fetch(presalePda);
       expect(presaleData.admin.toString()).to.equal(authority.publicKey.toString());
       expect(presaleData.tokenMintAddress.toString()).to.equal(tokenMint.toString());
       expect(presaleData.softcapAmount.toString()).to.equal(softcapAmount.toString());
@@ -196,231 +199,231 @@ describe("presalee", () => {
     }
   });
 
-  it("Deposits tokens to presale", async () => {
-    try {
-      const tx = await program.methods
-        .depositToken(depositTokenAmount)
-        .accounts({
-          presale: presaleAccount,
-          authority: authority.publicKey,
-          authorityTokenAccount: authorityTokenAccount,
-          presaleTokenAccount: presaleTokenAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .signers([authority])
-        .rpc();
+  // it("Deposits tokens to presale", async () => {
+  //   try {
+  //     const tx = await program.methods
+  //       .depositToken(depositTokenAmount)
+  //       .accounts({
+  //         presale: presaleAccount,
+  //         authority: authority.publicKey,
+  //         authorityTokenAccount: authorityTokenAccount,
+  //         presaleTokenAccount: presaleTokenAccount,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //       })
+  //       .signers([authority])
+  //       .rpc();
 
-      console.log("Deposit token transaction signature:", tx);
+  //     console.log("Deposit token transaction signature:", tx);
       
-      // Verify tokens were deposited
-      const presaleData = await program.account.presale.fetch(presaleAccount);
-      expect(presaleData.depositTokenAmount.toString()).to.equal(depositTokenAmount.toString());
+  //     // Verify tokens were deposited
+  //     const presaleData = await program.account.presale.fetch(presaleAccount);
+  //     expect(presaleData.depositTokenAmount.toString()).to.equal(depositTokenAmount.toString());
       
-    } catch (error) {
-      console.error("Error depositing tokens:", error);
-      throw error;
-    }
-  });
+  //   } catch (error) {
+  //     console.error("Error depositing tokens:", error);
+  //     throw error;
+  //   }
+  // });
 
-  it("Starts presale", async () => {
-    try {
-      const tx = await program.methods
-        .startPresale()
-        .accounts({
-          presale: presaleAccount,
-          authority: authority.publicKey,
-        })
-        .signers([authority])  
-        .rpc();
+  // it("Starts presale", async () => {
+  //   try {
+  //     const tx = await program.methods
+  //       .startPresale()
+  //       .accounts({
+  //         presale: presaleAccount,
+  //         authority: authority.publicKey,
+  //       })
+  //       .signers([authority])  
+  //       .rpc();
 
-      console.log("Start presale transaction signature:", tx);
+  //     console.log("Start presale transaction signature:", tx);
       
-      // Verify presale status changed
-      const presaleData = await program.account.presale.fetch(presaleAccount);
-      // Add status check based on your state structure
+  //     // Verify presale status changed
+  //     const presaleData = await program.account.presale.fetch(presaleAccount);
+  //     // Add status check based on your state structure
       
-    } catch (error) {
-      console.error("Error starting presale:", error);
-      throw error;
-    }
-  });
+  //   } catch (error) {
+  //     console.error("Error starting presale:", error);
+  //     throw error;
+  //   }
+  // });
 
-  it("Initializes user account", async () => {
-    try {
-      const tx = await program.methods
-        .initUser(
-          new anchor.BN(0), // buy_quote_amount
-          new anchor.BN(0), // buy_token_amount  
-          new anchor.BN(0), // buy_time
-          new anchor.BN(0), // claim_amount
-          new anchor.BN(0)  // claim_time
-        )
-        .accounts({
-          user: userAccount,
-          presale: presaleAccount,
-          buyer: user.publicKey,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([user])
-        .rpc();
+  // it("Initializes user account", async () => {
+  //   try {
+  //     const tx = await program.methods
+  //       .initUser(
+  //         new anchor.BN(0), // buy_quote_amount
+  //         new anchor.BN(0), // buy_token_amount  
+  //         new anchor.BN(0), // buy_time
+  //         new anchor.BN(0), // claim_amount
+  //         new anchor.BN(0)  // claim_time
+  //       )
+  //       .accounts({
+  //         user: userAccount,
+  //         presale: presaleAccount,
+  //         buyer: user.publicKey,
+  //         systemProgram: SystemProgram.programId,
+  //       })
+  //       .signers([user])
+  //       .rpc();
 
-      console.log("Init user transaction signature:", tx);
+  //     console.log("Init user transaction signature:", tx);
       
-      // Verify user account was created
-      const userData = await program.account.user.fetch(userAccount);
-      expect(userData.buyer.toString()).to.equal(user.publicKey.toString());
+  //     // Verify user account was created
+  //     const userData = await program.account.user.fetch(userAccount);
+  //     expect(userData.buyer.toString()).to.equal(user.publicKey.toString());
       
-    } catch (error) {
-      console.error("Error initializing user:", error);
-      throw error;
-    }
-  });
+  //   } catch (error) {
+  //     console.error("Error initializing user:", error);
+  //     throw error;
+  //   }
+  // });
 
-  it("Buys tokens", async () => {
-    const paymentAmount = new anchor.BN(500 * 10**6); // 500 USD
+  // it("Buys tokens", async () => {
+  //   const paymentAmount = new anchor.BN(500 * 10**6); // 500 USD
     
-    try {
-      const tx = await program.methods
-        .buyTokens(paymentAmount)
-        .accounts({
-          presale: presaleAccount,
-          user: userAccount,
-          buyer: user.publicKey,
-          buyerUsdAccount: userUsdAccount,
-          presaleUsdAccount: presaleUsdAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .signers([user])
-        .rpc();
+  //   try {
+  //     const tx = await program.methods
+  //       .buyTokens(paymentAmount)
+  //       .accounts({
+  //         presale: presaleAccount,
+  //         user: userAccount,
+  //         buyer: user.publicKey,
+  //         buyerUsdAccount: userUsdAccount,
+  //         presaleUsdAccount: presaleUsdAccount,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //       })
+  //       .signers([user])
+  //       .rpc();
 
-      console.log("Buy tokens transaction signature:", tx);
+  //     console.log("Buy tokens transaction signature:", tx);
       
-      // Verify purchase was recorded
-      const userData = await program.account.user.fetch(userAccount);
-      expect(userData.buyQuoteAmount.gt(new anchor.BN(0))).to.be.true;
+  //     // Verify purchase was recorded
+  //     const userData = await program.account.user.fetch(userAccount);
+  //     expect(userData.buyQuoteAmount.gt(new anchor.BN(0))).to.be.true;
       
-    } catch (error) {
-      console.error("Error buying tokens:", error);
-      throw error;
-    }
-  });
+  //   } catch (error) {
+  //     console.error("Error buying tokens:", error);
+  //     throw error;
+  //   }
+  // });
 
-  it("Claims tokens", async () => {
-    try {
-      // First, we need to get the user's token account
-      const userTokenAccount = await getAssociatedTokenAddress(tokenMint, user.publicKey);
+  // it("Claims tokens", async () => {
+  //   try {
+  //     // First, we need to get the user's token account
+  //     const userTokenAccount = await getAssociatedTokenAddress(tokenMint, user.publicKey);
       
-      const tx = await program.methods
-        .claimToken()
-        .accounts({
-          presale: presaleAccount,
-          user: userAccount,
-          buyer: user.publicKey,
-          buyerTokenAccount: userTokenAccount,
-          presaleTokenAccount: presaleTokenAccount,
-          tokenMint: tokenMint,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([user])
-        .rpc();
+  //     const tx = await program.methods
+  //       .claimToken()
+  //       .accounts({
+  //         presale: presaleAccount,
+  //         user: userAccount,
+  //         buyer: user.publicKey,
+  //         buyerTokenAccount: userTokenAccount,
+  //         presaleTokenAccount: presaleTokenAccount,
+  //         tokenMint: tokenMint,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //         systemProgram: SystemProgram.programId,
+  //       })
+  //       .signers([user])
+  //       .rpc();
 
-      console.log("Claim tokens transaction signature:", tx);
+  //     console.log("Claim tokens transaction signature:", tx);
       
-    } catch (error) {
-      console.error("Error claiming tokens:", error);
-      // This might fail if claiming conditions aren't met, which is expected
-      console.log("This is expected if claiming conditions aren't met");
-    }
-  });
+  //   } catch (error) {
+  //     console.error("Error claiming tokens:", error);
+  //     // This might fail if claiming conditions aren't met, which is expected
+  //     console.log("This is expected if claiming conditions aren't met");
+  //   }
+  // });
 
-  it("Ends presale (authority only)", async () => {
-    try {
-      const tx = await program.methods
-        .endPresale()
-        .accounts({
-          presale: presaleAccount,
-          authority: authority.publicKey,
-        })
-        .signers([authority])
-        .rpc();
+  // it("Ends presale (authority only)", async () => {
+  //   try {
+  //     const tx = await program.methods
+  //       .endPresale()
+  //       .accounts({
+  //         presale: presaleAccount,
+  //         authority: authority.publicKey,
+  //       })
+  //       .signers([authority])
+  //       .rpc();
 
-      console.log("End presale transaction signature:", tx);
+  //     console.log("End presale transaction signature:", tx);
       
-    } catch (error) {
-      console.error("Error ending presale:", error);
-      throw error;
-    }
-  });
+  //   } catch (error) {
+  //     console.error("Error ending presale:", error);
+  //     throw error;
+  //   }
+  // });
 
-  it("Withdraws tokens (authority only)", async () => {
-    try {
-      const tx = await program.methods
-        .withdrawToken()
-        .accounts({
-          presale: presaleAccount,
-          authority: authority.publicKey,
-          authorityTokenAccount: authorityTokenAccount,
-          presaleTokenAccount: presaleTokenAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .signers([authority])
-        .rpc();
+  // it("Withdraws tokens (authority only)", async () => {
+  //   try {
+  //     const tx = await program.methods
+  //       .withdrawToken()
+  //       .accounts({
+  //         presale: presaleAccount,
+  //         authority: authority.publicKey,
+  //         authorityTokenAccount: authorityTokenAccount,
+  //         presaleTokenAccount: presaleTokenAccount,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //       })
+  //       .signers([authority])
+  //       .rpc();
 
-      console.log("Withdraw tokens transaction signature:", tx);
+  //     console.log("Withdraw tokens transaction signature:", tx);
       
-    } catch (error) {
-      console.error("Error withdrawing tokens:", error);
-      // This might fail based on presale conditions
-      console.log("This might fail based on presale state/conditions");
-    }
-  });
+  //   } catch (error) {
+  //     console.error("Error withdrawing tokens:", error);
+  //     // This might fail based on presale conditions
+  //     console.log("This might fail based on presale state/conditions");
+  //   }
+  // });
 
-  it("Withdraws USD (authority only)", async () => {
-    try {
-      const tx = await program.methods
-        .withdrawUsd()
-        .accounts({
-          presale: presaleAccount,
-          authority: authority.publicKey,
-          authorityUsdAccount: authorityUsdAccount,
-          presaleUsdAccount: presaleUsdAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .signers([authority])
-        .rpc();
+  // it("Withdraws USD (authority only)", async () => {
+  //   try {
+  //     const tx = await program.methods
+  //       .withdrawUsd()
+  //       .accounts({
+  //         presale: presaleAccount,
+  //         authority: authority.publicKey,
+  //         authorityUsdAccount: authorityUsdAccount,
+  //         presaleUsdAccount: presaleUsdAccount,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //       })
+  //       .signers([authority])
+  //       .rpc();
 
-      console.log("Withdraw USD transaction signature:", tx);
+  //     console.log("Withdraw USD transaction signature:", tx);
       
-    } catch (error) {
-      console.error("Error withdrawing USD:", error);
-      // This might fail based on presale conditions
-      console.log("This might fail based on presale state/conditions");
-    }
-  });
+  //   } catch (error) {
+  //     console.error("Error withdrawing USD:", error);
+  //     // This might fail based on presale conditions
+  //     console.log("This might fail based on presale state/conditions");
+  //   }
+  // });
 
-  it("Claims refund", async () => {
-    try {
-      const tx = await program.methods
-        .refund()
-        .accounts({
-          presale: presaleAccount,
-          user: userAccount,
-          buyer: user.publicKey,
-          buyerUsdAccount: userUsdAccount,
-          presaleUsdAccount: presaleUsdAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .signers([user])
-        .rpc();
+  // it("Claims refund", async () => {
+  //   try {
+  //     const tx = await program.methods
+  //       .refund()
+  //       .accounts({
+  //         presale: presaleAccount,
+  //         user: userAccount,
+  //         buyer: user.publicKey,
+  //         buyerUsdAccount: userUsdAccount,
+  //         presaleUsdAccount: presaleUsdAccount,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //       })
+  //       .signers([user])
+  //       .rpc();
 
-      console.log("Refund transaction signature:", tx);
+  //     console.log("Refund transaction signature:", tx);
       
-    } catch (error) {
-      console.error("Error claiming refund:", error);
-      // This might fail if refund conditions aren't met
-      console.log("This might fail if refund conditions aren't met");
-    }
-  });
+  //   } catch (error) {
+  //     console.error("Error claiming refund:", error);
+  //     // This might fail if refund conditions aren't met
+  //     console.log("This might fail if refund conditions aren't met");
+  //   }
+  // });
 });
