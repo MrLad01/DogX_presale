@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-presalee = "EW33z8JRPAUWC51rkrACUqcnPZtsKUigvMeXgsNULAau"
+presalee = "B2sYczbsC9WPbxJHLK1cQDQ48NnFjCpv42styrjv9PdS"
 
 [registry]
 url = "https://api.apr.dev"
