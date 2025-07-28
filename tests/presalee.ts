@@ -130,11 +130,11 @@ describe("presalee", () => {
       5000 * 10**6 // 5,000 USD
     );
 
-    // // Derive PDAs
-    // [presaleAccount] = PublicKey.findProgramAddressSync(
-    //   [Buffer.from("presale"), seed.toArrayLike(Buffer, "le", 8)],
-    //   program.programId
-    // );
+    // Derive presale PDA with correct seeds
+    [presalePda] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("dogx_presale"), authority.publicKey.toBuffer()],
+      program.programId
+    );
 
     [userAccount] = PublicKey.findProgramAddressSync(
       [Buffer.from("user"), presalePda.toBuffer(), user.publicKey.toBuffer()],
@@ -147,13 +147,6 @@ describe("presalee", () => {
   });
 
 
-  // Derive presale PDA with correct seeds
-  [presalePda] = anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("dogx_presale"), authority.publicKey.toBuffer()],
-    program.programId
-  );
-  // [Buffer.from("dogx_presale"), seed.toArrayLike(Buffer, "le", 8)],
-  
   // Update test
   it("Initializes presale", async () => {
     try {
