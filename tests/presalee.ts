@@ -34,6 +34,7 @@ describe("presalee", () => {
   let authorityTokenAccount: anchor.web3.PublicKey;
   let authorityUsdAccount: anchor.web3.PublicKey;
   let userUsdAccount: anchor.web3.PublicKey;
+  let userTokenAccount: anchor.web3.PublicKey;
   let presaleTokenAccount: anchor.web3.PublicKey;
   let presaleUsdAccount: anchor.web3.PublicKey;
   let vaultDog: anchor.web3.PublicKey;
@@ -109,6 +110,13 @@ describe("presalee", () => {
       usdMint,
       user.publicKey
     );
+
+   userTokenAccount = await createAssociatedTokenAccount(
+  provider.connection,
+  user,
+  tokenMint,
+  user.publicKey
+);
 
     // Mint tokens to authority
     await mintTo(
@@ -315,7 +323,7 @@ describe("presalee", () => {
   it("Claims tokens", async () => {
     try {
       // First, we need to get the user's token account
-      const userTokenAccount = await getAssociatedTokenAddress(tokenMint, user.publicKey);
+      const userTokenATA = await getAssociatedTokenAddress(tokenMint, user.publicKey);
       vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda, true);
 
       
@@ -325,7 +333,7 @@ describe("presalee", () => {
           buyer: user.publicKey,
           usdMint,
           tokenMintAddress: tokenMint,
-          buyerAta: userTokenAccount,
+          buyerAta: userTokenATA,
           vaultDog,
           presale: presalePda,
           user: userAccount,
