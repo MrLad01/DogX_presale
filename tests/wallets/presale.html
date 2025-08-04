@@ -160,6 +160,7 @@
             <button id="connectWallet">Connect Wallet</button>
             <button id="disconnectWallet" disabled style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">Disconnect Wallet</button>
             <button id="initPresale" disabled>Initialize Presale</button>
+            <button id="depositTokens" disabled>Deposit Tokens</button>
             <button id="buyTokens" disabled>Buy Tokens</button>
             <button id="claimTokens" disabled>Claim Tokens</button>
             <button id="endPresale" disabled>End Presale</button>
@@ -170,17 +171,18 @@
 
         <div class="input-group">
             <label for="paymentAmount">Payment Amount (USDC):</label>
-            <input type="number" id="paymentAmount" placeholder="Enter amount in USDC" step="0.000001" value="10">
+            <input type="number" id="paymentAmount" placeholder="Enter amount in TestUSDC" step="0.000001" value="10">
         </div>
 
         <div class="input-group">
             <label for="tokenMintAddress">Token Mint Address:</label>
-            <input type="text" id="tokenMintAddress" placeholder="Enter token mint address">
+            <input type="text" id="tokenMintAddress" placeholder="Enter token mint address"
+            value="AwnwHVH7pXtRcidsZPFBDUzALX5DJCmHT4UHEn4RPw2n">
         </div>
 
         <div class="input-group">
-            <label for="usdMintAddress">USD Mint Address (Devnet USDC):</label>
-            <input type="text" id="usdMintAddress" placeholder="Enter USDC mint address" value="4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU">
+            <label for="usdMintAddress">test USD Mint Address (Devnet USDC):</label>
+            <input type="text" id="usdMintAddress" placeholder="Enter USDC mint address" value="5Fj4vZRfxzyfr8Win4T7BUSqKNbZJ9yi2wS7YKNwJyeu">
         </div>
 
         <div class="input-group">
@@ -580,136 +582,346 @@
 
         // Initialize presale with IDL support
         async function initializePresale() {
-            const button = document.getElementById('initPresale');
-            button.disabled = true;
-            button.textContent = 'Initializing...';
+    const button = document.getElementById('initPresale');
+    button.disabled = true;
+    button.textContent = 'Initializing...';
 
-            try {
-                if (!wallet || !connection) {
-                    throw new Error('Please connect your wallet first');
-                }
-
-                log('Initializing presale...');
-                
-                const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
-                const usdMintInput = document.getElementById('usdMintAddress').value.trim();
-                const seedInput = document.getElementById('presaleSeed').value;
-
-                if (!tokenMintInput || !usdMintInput || !seedInput) {
-                    throw new Error('Please provide token mint, USD mint addresses, and seed');
-                }
-
-                const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
-                const usdMint = new solanaWeb3.PublicKey(usdMintInput);
-                const seed = parseInt(seedInput);
-
-                // Try to use Anchor if available
-                if (program) {
-                    log('Using Anchor program for initialization...', 'info');
-                    
-                    // Example levels structure - adjust according to your needs
-                    const levels = [
-                        { tokenAmount: new anchor.BN(1000000), price: new anchor.BN(100000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                        { tokenAmount: new anchor.BN(2000000), price: new anchor.BN(110000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                        { tokenAmount: new anchor.BN(3000000), price: new anchor.BN(120000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                        { tokenAmount: new anchor.BN(4000000), price: new anchor.BN(130000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                        { tokenAmount: new anchor.BN(5000000), price: new anchor.BN(140000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                        { tokenAmount: new anchor.BN(6000000), price: new anchor.BN(150000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                        { tokenAmount: new anchor.BN(7000000), price: new anchor.BN(160000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) }
-                    ];
-
-                    const tx = await program.methods
-                        .initPresale(
-                            new anchor.BN(seed),
-                            tokenMint,
-                            usdMint,
-                            new anchor.BN(1000000), // softcap_amount
-                            new anchor.BN(10000000), // hardcap_amount
-                            new anchor.BN(14000000), // deposit_token_amount
-                            levels,
-                            new anchor.BN(0), // sold_token_amount
-                            new anchor.BN(Math.floor(Date.now() / 1000)), // start_time
-                            new anchor.BN(Math.floor(Date.now() / 1000) + 7 * 24 * 3600) // end_time (7 days from now)
-                        )
-                        .accounts({
-                            admin: wallet.publicKey,
-                            tokenMintAddress: tokenMint,
-                            usdMint: usdMint,
-                            systemProgram: anchor.web3.SystemProgram.programId,
-                            tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
-                            associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
-                        })
-                        .rpc();
-                    
-                    log(`Presale initialized with Anchor! Tx: ${tx}`, 'success');
-                    
-                } else {
-                    // Fallback to manual transaction building
-                    log('Using manual transaction building...', 'warning');
-                    
-                    const programId = new solanaWeb3.PublicKey(PROGRAM_ID);
-                    const seedBuffer = Buffer.alloc(8);
-                    seedBuffer.writeBigUInt64LE(BigInt(seed), 0);
-                    
-                    const presalePda = findProgramAddress([
-                        Buffer.from('dogx_presale'),
-                        wallet.publicKey.toBuffer(),
-                        seedBuffer
-                    ], PROGRAM_ID);
-
-                    if (!presalePda) {
-                        throw new Error('Failed to derive presale PDA');
-                    }
-
-                    log(`Presale PDA: ${presalePda.pda.toString()}`, 'info');
-
-                    // Create instruction data (you'll need to properly encode all parameters)
-                    const instructionData = Buffer.concat([
-                        Buffer.from([172, 248, 47, 226, 223, 52, 94, 217]), // discriminator
-                        seedBuffer,
-                        tokenMint.toBuffer(),
-                        usdMint.toBuffer(),
-                        // Add other parameters as needed - this is incomplete
-                    ]);
-
-                    const instruction = new solanaWeb3.TransactionInstruction({
-                        keys: [
-                            { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
-                            { pubkey: tokenMint, isSigner: false, isWritable: false },
-                            { pubkey: usdMint, isSigner: false, isWritable: false },
-                            { pubkey: presalePda.pda, isSigner: false, isWritable: true },
-                            { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
-                        ],
-                        programId: programId,
-                        data: instructionData
-                    });
-
-                    const transaction = new solanaWeb3.Transaction().add(instruction);
-                    const { blockhash } = await connection.getLatestBlockhash();
-                    transaction.recentBlockhash = blockhash;
-                    transaction.feePayer = wallet.publicKey;
-
-                    log('Sending transaction...', 'info');
-                    const signedTransaction = await wallet.signTransaction(transaction);
-                    const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-                    
-                    log(`Transaction sent: ${signature}`, 'success');
-                    log('Waiting for confirmation...', 'info');
-                    
-                    await connection.confirmTransaction(signature);
-                    log(`Presale initialized successfully!`, 'success');
-                }
-
-            } catch (error) {
-                log(`Failed to initialize presale: ${error.message}`, 'error');
-                console.error('Full error:', error);
-            } finally {
-                button.disabled = false;
-                button.textContent = 'Initialize Presale';
-            }
+    try {
+        if (!wallet || !connection) {
+            throw new Error('Please connect your wallet first');
         }
 
-        // Buy tokens (simplified implementation)
+        log('Initializing presale...');
+        
+        const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
+        const usdMintInput = document.getElementById('usdMintAddress').value.trim();
+        const seedInput = document.getElementById('presaleSeed').value;
+
+        if (!tokenMintInput || !usdMintInput || !seedInput) {
+            throw new Error('Please provide token mint, USD mint addresses, and seed');
+        }
+
+        const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
+        const usdMint = new solanaWeb3.PublicKey(usdMintInput);
+        const seed = parseInt(seedInput);
+
+        // Derive PDAs
+        const seedBuffer = new Uint8Array(8);
+        const dataView = new DataView(seedBuffer.buffer);
+        dataView.setBigUint64(0, BigInt(seed), true); // true for little-endian
+
+        const presalePda = findProgramAddress([
+            new TextEncoder().encode('dogx_presale'),
+            wallet.publicKey.toBuffer(),
+            seedBuffer
+        ], PROGRAM_ID);
+
+        if (!presalePda) {
+            throw new Error('Failed to derive presale PDA');
+        }
+
+        // Check if presale PDA already exists
+        const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+        if (presaleAccountInfo) {
+            throw new Error('Presale account already initialized for this seed and admin');
+        }
+
+        const vaultDogPda = findProgramAddress([
+            presalePda.pda.toBuffer(),
+            new Uint8Array([6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169]),
+            tokenMint.toBuffer()
+        ], new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'));
+
+        const vaultUsdPda = findProgramAddress([
+            presalePda.pda.toBuffer(),
+            new Uint8Array([6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169]),
+            usdMint.toBuffer()
+        ], new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'));
+
+        // Try to use Anchor if available
+        if (program) {
+            log('Using Anchor program for initialization...', 'info');
+            
+            const levels = [
+                { tokenAmount: new anchor.BN(1000000), price: new anchor.BN(100000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                { tokenAmount: new anchor.BN(2000000), price: new anchor.BN(110000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                { tokenAmount: new anchor.BN(3000000), price: new anchor.BN(120000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                { tokenAmount: new anchor.BN(4000000), price: new anchor.BN(130000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                { tokenAmount: new anchor.BN(5000000), price: new anchor.BN(140000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                { tokenAmount: new anchor.BN(6000000), price: new anchor.BN(150000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                { tokenAmount: new anchor.BN(7000000), price: new anchor.BN(160000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) }
+            ];
+
+            const tx = await program.methods.initPresale(
+                new anchor.BN(seed),
+                tokenMint,
+                usdMint,
+                new anchor.BN(1000000), // softcap_amount
+                new anchor.BN(10000000), // hardcap_amount
+                new anchor.BN(14000000), // deposit_token_amount
+                levels,
+                new anchor.BN(0), // sold_token_amount
+                new anchor.BN(Math.floor(Date.now() / 1000)), // start_time
+                new anchor.BN(Math.floor(Date.now() / 1000) + 7 * 24 * 3600) // end_time (7 days from now)
+            )
+            .accounts({
+                admin: wallet.publicKey,
+                tokenMintAddress: tokenMint,
+                usdMint: usdMint,
+                presale: presalePda.pda,
+                vaultDog: vaultDogPda.pda,
+                vaultUsd: vaultUsdPda.pda,
+                systemProgram: anchor.web3.SystemProgram.programId,
+                tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+                associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
+            })
+            .rpc();
+            
+            log(`Presale initialized with Anchor! Tx: ${tx}`, 'success');
+            
+        } else {
+            // Fallback to manual transaction building
+            log('Using manual transaction building...', 'warning');
+            
+            const programId = new solanaWeb3.PublicKey(PROGRAM_ID);
+
+            // Helper function to serialize u64
+            const serializeU64 = (value) => {
+                const buffer = new Uint8Array(8);
+                const dataView = new DataView(buffer.buffer);
+                dataView.setBigUint64(0, BigInt(value), true);
+                return buffer;
+            };
+
+            // Helper function to serialize Level struct
+            const serializeLevel = (level) => {
+                return new Uint8Array([
+                    ...serializeU64(level.tokenAmount),
+                    ...serializeU64(level.price),
+                    ...serializeU64(level.softCap),
+                    ...serializeU64(level.tokensSold)
+                ]);
+            };
+
+            // Serialize levels array (7 levels)
+            const levels = [
+                { tokenAmount: 1000000, price: 100000, softCap: 0, tokensSold: 0 },
+                { tokenAmount: 2000000, price: 110000, softCap: 0, tokensSold: 0 },
+                { tokenAmount: 3000000, price: 120000, softCap: 0, tokensSold: 0 },
+                { tokenAmount: 4000000, price: 130000, softCap: 0, tokensSold: 0 },
+                { tokenAmount: 5000000, price: 140000, softCap: 0, tokensSold: 0 },
+                { tokenAmount: 6000000, price: 150000, softCap: 0, tokensSold: 0 },
+                { tokenAmount: 7000000, price: 160000, softCap: 0, tokensSold: 0 }
+            ];
+
+            const levelsData = new Uint8Array(levels.flatMap(level => Array.from(serializeLevel(level))));
+
+            // Create instruction data
+            const instructionData = new Uint8Array([
+                ...[172, 248, 47, 226, 223, 52, 94, 217], // discriminator
+                ...seedBuffer,
+                ...tokenMint.toBytes(),
+                ...usdMint.toBytes(),
+                ...serializeU64(1000000), // softcap_amount
+                ...serializeU64(10000000), // hardcap_amount
+                ...serializeU64(14000000), // deposit_token_amount
+                ...levelsData,
+                ...serializeU64(0), // sold_token_amount
+                ...serializeU64(Math.floor(Date.now() / 1000)), // start_time
+                ...serializeU64(Math.floor(Date.now() / 1000) + 7 * 24 * 3600) // end_time
+            ]);
+
+            const instruction = new solanaWeb3.TransactionInstruction({
+                keys: [
+                    { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                    { pubkey: tokenMint, isSigner: false, isWritable: false },
+                    { pubkey: usdMint, isSigner: false, isWritable: false },
+                    { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                    { pubkey: vaultDogPda.pda, isSigner: false, isWritable: true },
+                    { pubkey: vaultUsdPda.pda, isSigner: false, isWritable: true },
+                    { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+                    { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
+                    { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
+                ],
+                programId: programId,
+                data: instructionData
+            });
+
+            const transaction = new solanaWeb3.Transaction().add(instruction);
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+            transaction.recentBlockhash = blockhash;
+            transaction.feePayer = wallet.publicKey;
+
+            log('Sending transaction...', 'info');
+            const signedTransaction = await wallet.signTransaction(transaction);
+            const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                skipPreflight: false, // Run preflight checks to catch errors early
+                maxRetries: 0 // Prevent automatic retries to avoid duplicate submissions
+            });
+            
+            log(`Transaction sent: ${signature}`, 'success');
+            log('Waiting for confirmation...', 'info');
+            
+            await connection.confirmTransaction({
+                signature,
+                blockhash,
+                lastValidBlockHeight
+            }, 'confirmed');
+            
+            log(`Presale initialized successfully!`, 'success');
+        }
+
+    } catch (error) {
+        log(`Failed to initialize presale: ${error.message}`, 'error');
+        console.error('Full error:', error);
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Initialize Presale';
+    }
+}
+
+    // Deposit tokens to presale
+    async function depositTokens() {
+    const button = document.getElementById('depositTokens');
+    button.disabled = true;
+    button.textContent = 'Depositing...';
+
+    try {
+        if (!wallet || !connection) {
+            throw new Error('Please connect your wallet first');
+        }
+
+        log('Depositing tokens to presale...');
+
+        const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
+        const usdMintInput = document.getElementById('usdMintAddress').value.trim();
+        const seedInput = document.getElementById('presaleSeed').value;
+        const depositAmount = 190000000 * 10**6; // 196,000,000 tokens with 6 decimals, matching test file
+
+        if (!tokenMintInput || !usdMintInput || !seedInput) {
+            throw new Error('Please provide token mint, USD mint addresses, and seed');
+        }
+
+        const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
+        const usdMint = new solanaWeb3.PublicKey(usdMintInput);
+        const seed = parseInt(seedInput);
+
+        // Derive presale PDA
+        const seedBuffer = new Uint8Array(8);
+        const dataView = new DataView(seedBuffer.buffer);
+        dataView.setBigUint64(0, BigInt(seed), true);
+
+        const presalePda = findProgramAddress([
+            new TextEncoder().encode('dogx_presale'),
+            wallet.publicKey.toBuffer(),
+            seedBuffer
+        ], PROGRAM_ID);
+
+        if (!presalePda) {
+            throw new Error('Failed to derive presale PDA');
+        }
+
+        // Check if presale exists
+        const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+        if (!presaleAccountInfo) {
+            throw new Error('Presale account not found. Please initialize the presale first.');
+        }
+
+        const adminAta = await getAssociatedTokenAddress(tokenMint, wallet.publicKey);
+        const vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda.pda, true);
+
+        // Check if admin has sufficient tokens
+        const adminTokenBalance = await connection.getTokenAccountBalance(adminAta);
+        if (!adminTokenBalance.value || adminTokenBalance.value.uiAmount < 14000) {
+            throw new Error(`Insufficient token balance in admin ATA: ${adminTokenBalance.value?.uiAmount || 0} tokens`);
+        }
+
+        // Try Anchor if available
+        if (program) {
+            log('Using Anchor program for depositing tokens...', 'info');
+            
+            const tx = await program.methods.depositToken({ low: new anchor.BN(depositAmount), high: new anchor.BN(0) })
+                .accounts({
+                    admin: wallet.publicKey,
+                    usdMint: usdMint,
+                    tokenMintAddress: tokenMint,
+                    adminAta: adminAta,
+                    vaultDog: vaultDog,
+                    presale: presalePda.pda,
+                    tokenProgram: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+                    associatedTokenProgram: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'),
+                    systemProgram: solanaWeb3.SystemProgram.programId,
+                })
+                .rpc();
+            
+            log(`Tokens deposited successfully! Tx: ${tx}`, 'success');
+        } else {
+            log('Using manual transaction building for deposit...', 'warning');
+
+            const programId = new solanaWeb3.PublicKey(PROGRAM_ID);
+
+            // Serialize u64 depositAmount
+            const serializeU64 = (value) => {
+                const buffer = new Uint8Array(8);
+                const dataView = new DataView(buffer.buffer);
+                dataView.setBigUint64(0, BigInt(value), true);
+                return buffer;
+            };
+
+            // Instruction data: discriminator + depositAmount (u64)
+            const instructionData = new Uint8Array([
+                ...[11, 156, 96, 218, 39, 163, 180, 19], // e.g., [123, 45, 67, 89, 12, 34, 56, 78]
+                ...serializeU64(depositAmount)
+            ]);
+
+            const instruction = new solanaWeb3.TransactionInstruction({
+                keys: [
+                    { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                    { pubkey: usdMint, isSigner: false, isWritable: false },
+                    { pubkey: tokenMint, isSigner: false, isWritable: false },
+                    { pubkey: adminAta, isSigner: false, isWritable: true },
+                    { pubkey: vaultDog, isSigner: false, isWritable: true },
+                    { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                    { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
+                    { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
+                    { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+                ],
+                programId: programId,
+                data: instructionData
+            });
+
+            const transaction = new solanaWeb3.Transaction().add(instruction);
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+            transaction.recentBlockhash = blockhash;
+            transaction.feePayer = wallet.publicKey;
+
+            log('Sending deposit transaction...', 'info');
+            const signedTransaction = await wallet.signTransaction(transaction);
+            const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                skipPreflight: false,
+                maxRetries: 0
+            });
+            
+            log(`Transaction sent: ${signature}`, 'success');
+            log('Waiting for confirmation...', 'info');
+            
+            await connection.confirmTransaction({
+                signature,
+                blockhash,
+                lastValidBlockHeight
+            }, 'confirmed');
+            
+            log(`Tokens deposited successfully! Tx: ${signature}`, 'success');
+        }
+
+    } catch (error) {
+        log(`Failed to deposit tokens: ${error.message}`, 'error');
+        console.error('Full error:', error);
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Deposit Tokens';
+    }
+}        // Buy tokens (simplified implementation)
         async function buyTokens() {
             const button = document.getElementById('buyTokens');
             button.disabled = true;
@@ -781,6 +993,7 @@
         document.getElementById('connectWallet').addEventListener('click', connectWallet);
         document.getElementById('disconnectWallet').addEventListener('click', disconnectWallet);
         document.getElementById('initPresale').addEventListener('click', initializePresale);
+        document.getElementById('depositTokens').addEventListener('click', depositTokens);
         document.getElementById('buyTokens').addEventListener('click', buyTokens);
         document.getElementById('claimTokens').addEventListener('click', claimTokens);
         document.getElementById('endPresale').addEventListener('click', endPresale);
