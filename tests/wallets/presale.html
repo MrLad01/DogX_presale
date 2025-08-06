@@ -160,6 +160,7 @@
             <button id="connectWallet">Connect Wallet</button>
             <button id="disconnectWallet" disabled style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">Disconnect Wallet</button>
             <button id="initPresale" disabled>Initialize Presale</button>
+            <button id="startPresale" disabled>Start Presale</button>
             <button id="depositTokens" disabled>Deposit Tokens</button>
             <button id="buyTokens" disabled>Buy Tokens</button>
             <button id="claimTokens" disabled>Claim Tokens</button>
@@ -177,12 +178,12 @@
         <div class="input-group">
             <label for="tokenMintAddress">Token Mint Address:</label>
             <input type="text" id="tokenMintAddress" placeholder="Enter token mint address"
-            value="AwnwHVH7pXtRcidsZPFBDUzALX5DJCmHT4UHEn4RPw2n">
+            value="8ME8EAAmLegMSBae3DgN6LPznr6P3xaHAN8Pd7mMbJ3o">
         </div>
 
         <div class="input-group">
             <label for="usdMintAddress">test USD Mint Address (Devnet USDC):</label>
-            <input type="text" id="usdMintAddress" placeholder="Enter USDC mint address" value="5Fj4vZRfxzyfr8Win4T7BUSqKNbZJ9yi2wS7YKNwJyeu">
+            <input type="text" id="usdMintAddress" placeholder="Enter USDC mint address" value="3MWScP9VFh4BQyWDFj5aR3doz6cSKTB2MRGnJB7vdz6P">
         </div>
 
         <div class="input-group">
@@ -203,12 +204,12 @@
         let connection = null;
         let program = null;
         let provider = null;
-        const PROGRAM_ID = 'B2sYczbsC9WPbxJHLK1cQDQ48NnFjCpv42styrjv9PdS';
+        const PROGRAM_ID = 'EAHRUPTq2HhXZcoCxLyiU9DzqJqYTfwtB9wp9CkmrJmc';
         const NETWORK = 'devnet'; // Change to 'mainnet-beta' for mainnet
 
         // Your complete IDL
         const IDL = {
-            "address": "B2sYczbsC9WPbxJHLK1cQDQ48NnFjCpv42styrjv9PdS",
+            "address": "EAHRUPTq2HhXZcoCxLyiU9DzqJqYTfwtB9wp9CkmrJmc",
             "metadata": {
                 "name": "presalee",
                 "version": "0.1.0",
@@ -217,196 +218,2457 @@
             },
             "instructions": [
                 {
-                    "name": "buy_tokens",
-                    "discriminator": [189, 21, 230, 133, 247, 2, 110, 42],
-                    "accounts": [
-                        { "name": "buyer", "writable": true, "signer": true },
-                        { "name": "token_mint_address", "relations": ["presale"] },
-                        { "name": "usd_mint", "relations": ["presale"] },
+                "name": "buy_tokens",
+                "discriminator": [
+                    189,
+                    21,
+                    230,
+                    133,
+                    247,
+                    2,
+                    110,
+                    42
+                ],
+                "accounts": [
+                    {
+                    "name": "buyer",
+                    "writable": true,
+                    "signer": true
+                    },
+                    {
+                    "name": "token_mint_address",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "usd_mint",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
                         {
-                            "name": "presale",
-                            "writable": true,
-                            "pda": {
-                                "seeds": [
-                                    { "kind": "const", "value": [100, 111, 103, 120, 95, 112, 114, 101, 115, 97, 108, 101] },
-                                    { "kind": "account", "path": "presale.admin", "account": "Presale" },
-                                    { "kind": "account", "path": "presale.seed", "account": "Presale" }
-                                ]
-                            }
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
                         },
                         {
-                            "name": "buyer_ata",
-                            "writable": true,
-                            "pda": {
-                                "seeds": [
-                                    { "kind": "account", "path": "buyer" },
-                                    { "kind": "const", "value": [6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169] },
-                                    { "kind": "account", "path": "usd_mint" }
-                                ],
-                                "program": {
-                                    "kind": "const",
-                                    "value": [140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89]
-                                }
-                            }
+                            "kind": "account",
+                            "path": "presale.admin",
+                            "account": "Presale"
                         },
                         {
-                            "name": "vault_usd",
-                            "writable": true,
-                            "pda": {
-                                "seeds": [
-                                    { "kind": "account", "path": "presale" },
-                                    { "kind": "const", "value": [6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169] },
-                                    { "kind": "account", "path": "usd_mint" }
-                                ],
-                                "program": {
-                                    "kind": "const",
-                                    "value": [140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89]
-                                }
-                            }
+                            "kind": "account",
+                            "path": "presale.seed",
+                            "account": "Presale"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "buyer_ata",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "buyer"
                         },
                         {
-                            "name": "user",
-                            "writable": true,
-                            "pda": {
-                                "seeds": [
-                                    { "kind": "const", "value": [117, 115, 101, 114] },
-                                    { "kind": "account", "path": "presale" },
-                                    { "kind": "account", "path": "buyer" }
-                                ]
-                            }
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
                         },
-                        { "name": "system_program", "address": "11111111111111111111111111111111" },
-                        { "name": "associated_token_program", "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" },
-                        { "name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" }
-                    ],
-                    "args": [{ "name": "payment", "type": "u64" }]
+                        {
+                            "kind": "account",
+                            "path": "usd_mint"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "vault_usd",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "usd_mint"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "user",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            117,
+                            115,
+                            101,
+                            114
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "buyer"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                    },
+                    {
+                    "name": "associated_token_program",
+                    "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+                    },
+                    {
+                    "name": "token_program",
+                    "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                    }
+                ],
+                "args": [
+                    {
+                    "name": "payment",
+                    "type": "u64"
+                    }
+                ]
                 },
                 {
-                    "name": "init_presale",
-                    "discriminator": [172, 248, 47, 226, 223, 52, 94, 217],
-                    "accounts": [
-                        { "name": "admin", "writable": true, "signer": true },
-                        { "name": "token_mint_address" },
-                        { "name": "usd_mint" },
-                        {
-                            "name": "presale",
-                            "writable": true,
-                            "pda": {
-                                "seeds": [
-                                    { "kind": "const", "value": [100, 111, 103, 120, 95, 112, 114, 101, 115, 97, 108, 101] },
-                                    { "kind": "account", "path": "admin" },
-                                    { "kind": "arg", "path": "seed" }
-                                ]
-                            }
-                        },
-                        {
-                            "name": "vault_dog",
-                            "writable": true,
-                            "pda": {
-                                "seeds": [
-                                    { "kind": "account", "path": "presale" },
-                                    { "kind": "const", "value": [6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169] },
-                                    { "kind": "account", "path": "token_mint_address" }
-                                ],
-                                "program": {
-                                    "kind": "const",
-                                    "value": [140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89]
-                                }
-                            }
-                        },
-                        {
-                            "name": "vault_usd",
-                            "writable": true,
-                            "pda": {
-                                "seeds": [
-                                    { "kind": "account", "path": "presale" },
-                                    { "kind": "const", "value": [6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169] },
-                                    { "kind": "account", "path": "usd_mint" }
-                                ],
-                                "program": {
-                                    "kind": "const",
-                                    "value": [140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89]
-                                }
-                            }
-                        },
-                        { "name": "system_program", "address": "11111111111111111111111111111111" },
-                        { "name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" },
-                        { "name": "associated_token_program", "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" }
-                    ],
-                    "args": [
-                        { "name": "seed", "type": "u64" },
-                        { "name": "token_mint_address", "type": "pubkey" },
-                        { "name": "usd_mint", "type": "pubkey" },
-                        { "name": "softcap_amount", "type": "u64" },
-                        { "name": "hardcap_amount", "type": "u64" },
-                        { "name": "deposit_token_amount", "type": "u64" },
-                        { "name": "levels", "type": { "array": [{ "defined": { "name": "Level" } }, 7] } },
-                        { "name": "sold_token_amount", "type": "u64" },
-                        { "name": "start_time", "type": "u64" },
-                        { "name": "end_time", "type": "u64" }
+                "name": "claim_token",
+                "discriminator": [
+                    116,
+                    206,
+                    27,
+                    191,
+                    166,
+                    19,
+                    0,
+                    73
+                ],
+                "accounts": [
+                    {
+                    "name": "buyer",
+                    "writable": true,
+                    "signer": true
+                    },
+                    {
+                    "name": "usd_mint",
+                    "relations": [
+                        "presale"
                     ]
+                    },
+                    {
+                    "name": "token_mint_address",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "buyer_ata",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "buyer"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "token_mint_address"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "vault_dog",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "token_mint_address"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.admin",
+                            "account": "Presale"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.seed",
+                            "account": "Presale"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "user",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            117,
+                            115,
+                            101,
+                            114
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "buyer"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "token_program",
+                    "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                    },
+                    {
+                    "name": "associated_token_program",
+                    "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+                    },
+                    {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                    }
+                ],
+                "args": []
+                },
+                {
+                "name": "deposit_token",
+                "discriminator": [
+                    11,
+                    156,
+                    96,
+                    218,
+                    39,
+                    163,
+                    180,
+                    19
+                ],
+                "accounts": [
+                    {
+                    "name": "admin",
+                    "writable": true,
+                    "signer": true
+                    },
+                    {
+                    "name": "usd_mint",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "token_mint_address",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "admin_ata",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "admin"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "token_mint_address"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "vault_dog",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "token_mint_address"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "admin"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.seed",
+                            "account": "Presale"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "token_program",
+                    "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                    },
+                    {
+                    "name": "associated_token_program",
+                    "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+                    },
+                    {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                    }
+                ],
+                "args": [
+                    {
+                    "name": "amount",
+                    "type": "u64"
+                    }
+                ]
+                },
+                {
+                "name": "end_presale",
+                "discriminator": [
+                    54,
+                    154,
+                    35,
+                    93,
+                    29,
+                    58,
+                    10,
+                    208
+                ],
+                "accounts": [
+                    {
+                    "name": "admin",
+                    "writable": true,
+                    "signer": true
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.admin",
+                            "account": "Presale"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.seed",
+                            "account": "Presale"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                    }
+                ],
+                "args": []
+                },
+                {
+                "name": "init_presale",
+                "discriminator": [
+                    172,
+                    248,
+                    47,
+                    226,
+                    223,
+                    52,
+                    94,
+                    217
+                ],
+                "accounts": [
+                    {
+                    "name": "admin",
+                    "writable": true,
+                    "signer": true
+                    },
+                    {
+                    "name": "token_mint_address"
+                    },
+                    {
+                    "name": "usd_mint"
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "admin"
+                        },
+                        {
+                            "kind": "arg",
+                            "path": "seed"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "vault_dog",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "token_mint_address"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "vault_usd",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "usd_mint"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                    },
+                    {
+                    "name": "token_program",
+                    "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                    },
+                    {
+                    "name": "associated_token_program",
+                    "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+                    }
+                ],
+                "args": [
+                    {
+                    "name": "seed",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "token_mint_address",
+                    "type": "pubkey"
+                    },
+                    {
+                    "name": "usd_mint",
+                    "type": "pubkey"
+                    },
+                    {
+                    "name": "softcap_amount",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "hardcap_amount",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "deposit_token_amount",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "levels",
+                    "type": {
+                        "array": [
+                        {
+                            "defined": {
+                            "name": "Level"
+                            }
+                        },
+                        7
+                        ]
+                    }
+                    },
+                    {
+                    "name": "sold_token_amount",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "start_time",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "end_time",
+                    "type": "u64"
+                    }
+                ]
+                },
+                {
+                "name": "init_user",
+                "discriminator": [
+                    14,
+                    51,
+                    68,
+                    159,
+                    237,
+                    78,
+                    158,
+                    102
+                ],
+                "accounts": [
+                    {
+                    "name": "buyer",
+                    "writable": true,
+                    "signer": true
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.admin",
+                            "account": "Presale"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.seed",
+                            "account": "Presale"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "user_info",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            117,
+                            115,
+                            101,
+                            114
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "buyer"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                    }
+                ],
+                "args": [
+                    {
+                    "name": "buy_quote_amount",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "buy_token_amount",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "buy_time",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "claim_amount",
+                    "type": "u64"
+                    },
+                    {
+                    "name": "claim_time",
+                    "type": "u64"
+                    }
+                ]
+                },
+                {
+                "name": "refund",
+                "discriminator": [
+                    2,
+                    96,
+                    183,
+                    251,
+                    63,
+                    208,
+                    46,
+                    46
+                ],
+                "accounts": [
+                    {
+                    "name": "buyer",
+                    "writable": true,
+                    "signer": true
+                    },
+                    {
+                    "name": "admin",
+                    "docs": [
+                        "CHECK : FY"
+                    ],
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "token_mint_address",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "usd_mint",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.admin",
+                            "account": "Presale"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.seed",
+                            "account": "Presale"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "buyer_ata",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "buyer"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "usd_mint"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "vault_usd",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "usd_mint"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "user",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            117,
+                            115,
+                            101,
+                            114
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "buyer"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                    },
+                    {
+                    "name": "associated_token_program",
+                    "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+                    },
+                    {
+                    "name": "token_program",
+                    "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                    }
+                ],
+                "args": []
+                },
+                {
+                "name": "start_presale",
+                "discriminator": [
+                    57,
+                    19,
+                    73,
+                    191,
+                    195,
+                    254,
+                    45,
+                    223
+                ],
+                "accounts": [
+                    {
+                    "name": "admin",
+                    "writable": true,
+                    "signer": true,
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.admin",
+                            "account": "Presale"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.seed",
+                            "account": "Presale"
+                        }
+                        ]
+                    }
+                    }
+                ],
+                "args": []
+                },
+                {
+                "name": "withdraw_token",
+                "discriminator": [
+                    136,
+                    235,
+                    181,
+                    5,
+                    101,
+                    109,
+                    57,
+                    81
+                ],
+                "accounts": [
+                    {
+                    "name": "admin",
+                    "writable": true,
+                    "signer": true,
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "usd_mint",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "token_mint_address",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "admin_ata",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "admin"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "token_mint_address"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "vault_dog",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "token_mint_address"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "admin"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.seed",
+                            "account": "Presale"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "token_program",
+                    "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                    },
+                    {
+                    "name": "associated_token_program",
+                    "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+                    },
+                    {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                    }
+                ],
+                "args": []
+                },
+                {
+                "name": "withdraw_usd",
+                "discriminator": [
+                    8,
+                    46,
+                    49,
+                    84,
+                    17,
+                    127,
+                    139,
+                    71
+                ],
+                "accounts": [
+                    {
+                    "name": "admin",
+                    "writable": true,
+                    "signer": true,
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "usd_mint",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "token_mint_address",
+                    "relations": [
+                        "presale"
+                    ]
+                    },
+                    {
+                    "name": "admin_ata",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "admin"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "usd_mint"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "vault_usd",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "account",
+                            "path": "presale"
+                        },
+                        {
+                            "kind": "const",
+                            "value": [
+                            6,
+                            221,
+                            246,
+                            225,
+                            215,
+                            101,
+                            161,
+                            147,
+                            217,
+                            203,
+                            225,
+                            70,
+                            206,
+                            235,
+                            121,
+                            172,
+                            28,
+                            180,
+                            133,
+                            237,
+                            95,
+                            91,
+                            55,
+                            145,
+                            58,
+                            140,
+                            245,
+                            133,
+                            126,
+                            255,
+                            0,
+                            169
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "usd_mint"
+                        }
+                        ],
+                        "program": {
+                        "kind": "const",
+                        "value": [
+                            140,
+                            151,
+                            37,
+                            143,
+                            78,
+                            36,
+                            137,
+                            241,
+                            187,
+                            61,
+                            16,
+                            41,
+                            20,
+                            142,
+                            13,
+                            131,
+                            11,
+                            90,
+                            19,
+                            153,
+                            218,
+                            255,
+                            16,
+                            132,
+                            4,
+                            142,
+                            123,
+                            216,
+                            219,
+                            233,
+                            248,
+                            89
+                        ]
+                        }
+                    }
+                    },
+                    {
+                    "name": "presale",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                        {
+                            "kind": "const",
+                            "value": [
+                            100,
+                            111,
+                            103,
+                            120,
+                            95,
+                            112,
+                            114,
+                            101,
+                            115,
+                            97,
+                            108,
+                            101
+                            ]
+                        },
+                        {
+                            "kind": "account",
+                            "path": "admin"
+                        },
+                        {
+                            "kind": "account",
+                            "path": "presale.seed",
+                            "account": "Presale"
+                        }
+                        ]
+                    }
+                    },
+                    {
+                    "name": "token_program",
+                    "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                    },
+                    {
+                    "name": "associated_token_program",
+                    "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+                    },
+                    {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                    }
+                ],
+                "args": []
                 }
             ],
             "accounts": [
-                { "name": "Presale", "discriminator": [38, 215, 222, 14, 115, 220, 52, 168] },
-                { "name": "UserInfo", "discriminator": [83, 134, 200, 56, 144, 56, 10, 62] }
+                {
+                "name": "Presale",
+                "discriminator": [
+                    38,
+                    215,
+                    222,
+                    14,
+                    115,
+                    220,
+                    52,
+                    168
+                ]
+                },
+                {
+                "name": "UserInfo",
+                "discriminator": [
+                    83,
+                    134,
+                    200,
+                    56,
+                    144,
+                    56,
+                    10,
+                    62
+                ]
+                }
+            ],
+            "errors": [
+                {
+                "code": 6000,
+                "name": "Unauthorized",
+                "msg": "You are not authorized to perform this action."
+                },
+                {
+                "code": 6001,
+                "name": "NotAllowed",
+                "msg": "Not allowed"
+                },
+                {
+                "code": 6002,
+                "name": "MathOverflow",
+                "msg": "Math operation overflow"
+                },
+                {
+                "code": 6003,
+                "name": "AlreadyMarked",
+                "msg": "Already marked"
+                },
+                {
+                "code": 6004,
+                "name": "PresaleNotStarted",
+                "msg": "Presale not started yet"
+                },
+                {
+                "code": 6005,
+                "name": "PresaleEnded",
+                "msg": "Presale already ended"
+                },
+                {
+                "code": 6006,
+                "name": "AlreadyClaimed",
+                "msg": "User already claimed"
+                },
+                {
+                "code": 6007,
+                "name": "AlreadyLive",
+                "msg": "Presale is live already"
+                },
+                {
+                "code": 6008,
+                "name": "TokenAmountMismatch",
+                "msg": "Token amount mismatch"
+                },
+                {
+                "code": 6009,
+                "name": "InsufficientFund",
+                "msg": "Insufficient Tokens"
+                },
+                {
+                "code": 6010,
+                "name": "PresaleNotEnded",
+                "msg": "Presale not ended yet"
+                },
+                {
+                "code": 6011,
+                "name": "HardCapped",
+                "msg": "Presale already ended"
+                },
+                {
+                "code": 6012,
+                "name": "SoftCapNotReached",
+                "msg": "Presale soft cap not reached"
+                },
+                {
+                "code": 6013,
+                "name": "SoftCapReached",
+                "msg": "Presale soft cap reached"
+                },
+                {
+                "code": 6014,
+                "name": "CalculationOverflow",
+                "msg": "Amount exceeds available"
+                },
+                {
+                "code": 6015,
+                "name": "ExceedsDepositAmount",
+                "msg": "Cannot buy. Token limit exceeded"
+                },
+                {
+                "code": 6016,
+                "name": "ExactPaymentRequired",
+                "msg": "Exact payment required"
+                }
             ],
             "types": [
                 {
-                    "name": "Level",
-                    "type": {
-                        "kind": "struct",
-                        "fields": [
-                            { "name": "token_amount", "type": "u64" },
-                            { "name": "price", "type": "u64" },
-                            { "name": "soft_cap", "type": "u64" },
-                            { "name": "tokens_sold", "type": "u64" }
-                        ]
+                "name": "Level",
+                "type": {
+                    "kind": "struct",
+                    "fields": [
+                    {
+                        "name": "token_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "price",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "soft_cap",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "tokens_sold",
+                        "type": "u64"
                     }
+                    ]
+                }
                 },
                 {
-                    "name": "Presale",
-                    "type": {
-                        "kind": "struct",
-                        "fields": [
-                            { "name": "seed", "type": "u64" },
-                            { "name": "admin", "type": "pubkey" },
-                            { "name": "is_live", "type": "bool" },
-                            { "name": "current_level", "type": "u8" },
-                            { "name": "levels", "type": { "array": [{ "defined": { "name": "Level" } }, 7] } },
-                            { "name": "sold_token_amount", "type": "u64" },
-                            { "name": "token_mint_address", "type": "pubkey" },
-                            { "name": "usd_mint", "type": "pubkey" },
-                            { "name": "softcap_amount", "type": "u64" },
-                            { "name": "hardcap_amount", "type": "u64" },
-                            { "name": "deposit_token_amount", "type": "u64" },
-                            { "name": "start_time", "type": "u64" },
-                            { "name": "end_time", "type": "u64" },
-                            { "name": "is_soft_capped", "type": "bool" },
-                            { "name": "is_hard_capped", "type": "bool" },
-                            { "name": "bump", "type": "u8" }
+                "name": "Presale",
+                "type": {
+                    "kind": "struct",
+                    "fields": [
+                    {
+                        "name": "seed",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "admin",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "is_live",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "current_level",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "levels",
+                        "type": {
+                        "array": [
+                            {
+                            "defined": {
+                                "name": "Level"
+                            }
+                            },
+                            7
                         ]
+                        }
+                    },
+                    {
+                        "name": "sold_token_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "token_mint_address",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "usd_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "softcap_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "hardcap_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "deposit_token_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "start_time",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "end_time",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "is_soft_capped",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "is_hard_capped",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "bump",
+                        "type": "u8"
                     }
+                    ]
+                }
                 },
                 {
-                    "name": "UserInfo",
-                    "type": {
-                        "kind": "struct",
-                        "fields": [
-                            { "name": "buyer", "type": "pubkey" },
-                            { "name": "buy_quote_amount", "type": "u64" },
-                            { "name": "buy_token_amount", "type": "u64" },
-                            { "name": "has_claimed_token", "type": "bool" },
-                            { "name": "has_claimed_refund", "type": "bool" },
-                            { "name": "buy_time", "type": "u64" },
-                            { "name": "claim_amount", "type": "u64" },
-                            { "name": "claim_time", "type": "u64" },
-                            { "name": "bump", "type": "u8" }
-                        ]
+                "name": "UserInfo",
+                "type": {
+                    "kind": "struct",
+                    "fields": [
+                    {
+                        "name": "buyer",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "buy_quote_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "buy_token_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "has_claimed_token",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "has_claimed_refund",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "buy_time",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "claim_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "claim_time",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "bump",
+                        "type": "u8"
                     }
+                    ]
+                }
                 }
             ]
-        };
+            };
 
         // Utility functions
         function log(message, type = 'info') {
@@ -582,204 +2844,280 @@
 
         // Initialize presale with IDL support
         async function initializePresale() {
-    const button = document.getElementById('initPresale');
-    button.disabled = true;
-    button.textContent = 'Initializing...';
+        const button = document.getElementById('initPresale');
+        button.disabled = true;
+        button.textContent = 'Initializing...';
 
-    try {
-        if (!wallet || !connection) {
-            throw new Error('Please connect your wallet first');
-        }
+        try {
+            if (!wallet || !connection) {
+                throw new Error('Please connect your wallet first');
+            }
 
-        log('Initializing presale...');
-        
-        const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
-        const usdMintInput = document.getElementById('usdMintAddress').value.trim();
-        const seedInput = document.getElementById('presaleSeed').value;
-
-        if (!tokenMintInput || !usdMintInput || !seedInput) {
-            throw new Error('Please provide token mint, USD mint addresses, and seed');
-        }
-
-        const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
-        const usdMint = new solanaWeb3.PublicKey(usdMintInput);
-        const seed = parseInt(seedInput);
-
-        // Derive PDAs
-        const seedBuffer = new Uint8Array(8);
-        const dataView = new DataView(seedBuffer.buffer);
-        dataView.setBigUint64(0, BigInt(seed), true); // true for little-endian
-
-        const presalePda = findProgramAddress([
-            new TextEncoder().encode('dogx_presale'),
-            wallet.publicKey.toBuffer(),
-            seedBuffer
-        ], PROGRAM_ID);
-
-        if (!presalePda) {
-            throw new Error('Failed to derive presale PDA');
-        }
-
-        // Check if presale PDA already exists
-        const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
-        if (presaleAccountInfo) {
-            throw new Error('Presale account already initialized for this seed and admin');
-        }
-
-        const vaultDogPda = findProgramAddress([
-            presalePda.pda.toBuffer(),
-            new Uint8Array([6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169]),
-            tokenMint.toBuffer()
-        ], new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'));
-
-        const vaultUsdPda = findProgramAddress([
-            presalePda.pda.toBuffer(),
-            new Uint8Array([6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169]),
-            usdMint.toBuffer()
-        ], new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'));
-
-        // Try to use Anchor if available
-        if (program) {
-            log('Using Anchor program for initialization...', 'info');
+            log('Initializing presale...');
             
-            const levels = [
-                { tokenAmount: new anchor.BN(1000000), price: new anchor.BN(100000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                { tokenAmount: new anchor.BN(2000000), price: new anchor.BN(110000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                { tokenAmount: new anchor.BN(3000000), price: new anchor.BN(120000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                { tokenAmount: new anchor.BN(4000000), price: new anchor.BN(130000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                { tokenAmount: new anchor.BN(5000000), price: new anchor.BN(140000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                { tokenAmount: new anchor.BN(6000000), price: new anchor.BN(150000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-                { tokenAmount: new anchor.BN(7000000), price: new anchor.BN(160000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) }
-            ];
+            const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
+            const usdMintInput = document.getElementById('usdMintAddress').value.trim();
+            const seedInput = document.getElementById('presaleSeed').value;
 
-            const tx = await program.methods.initPresale(
-                new anchor.BN(seed),
-                tokenMint,
-                usdMint,
-                new anchor.BN(1000000), // softcap_amount
-                new anchor.BN(10000000), // hardcap_amount
-                new anchor.BN(14000000), // deposit_token_amount
-                levels,
-                new anchor.BN(0), // sold_token_amount
-                new anchor.BN(Math.floor(Date.now() / 1000)), // start_time
-                new anchor.BN(Math.floor(Date.now() / 1000) + 7 * 24 * 3600) // end_time (7 days from now)
-            )
-            .accounts({
-                admin: wallet.publicKey,
-                tokenMintAddress: tokenMint,
-                usdMint: usdMint,
-                presale: presalePda.pda,
-                vaultDog: vaultDogPda.pda,
-                vaultUsd: vaultUsdPda.pda,
-                systemProgram: anchor.web3.SystemProgram.programId,
-                tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
-                associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
-            })
-            .rpc();
-            
-            log(`Presale initialized with Anchor! Tx: ${tx}`, 'success');
-            
-        } else {
-            // Fallback to manual transaction building
-            log('Using manual transaction building...', 'warning');
-            
-            const programId = new solanaWeb3.PublicKey(PROGRAM_ID);
+            if (!tokenMintInput || !usdMintInput || !seedInput) {
+                throw new Error('Please provide token mint, USD mint addresses, and seed');
+            }
 
-            // Helper function to serialize u64
-            const serializeU64 = (value) => {
-                const buffer = new Uint8Array(8);
-                const dataView = new DataView(buffer.buffer);
-                dataView.setBigUint64(0, BigInt(value), true);
-                return buffer;
-            };
+            const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
+            const usdMint = new solanaWeb3.PublicKey(usdMintInput);
+            const seed = parseInt(seedInput);
 
-            // Helper function to serialize Level struct
-            const serializeLevel = (level) => {
-                return new Uint8Array([
-                    ...serializeU64(level.tokenAmount),
-                    ...serializeU64(level.price),
-                    ...serializeU64(level.softCap),
-                    ...serializeU64(level.tokensSold)
+            // Derive PDAs
+            const seedBuffer = new Uint8Array(8);
+            const dataView = new DataView(seedBuffer.buffer);
+            dataView.setBigUint64(0, BigInt(seed), true); // true for little-endian
+
+            const presalePda = findProgramAddress([
+                new TextEncoder().encode('dogx_presale'),
+                wallet.publicKey.toBytes(),
+                seedBuffer
+            ], PROGRAM_ID);
+
+            if (!presalePda) {
+                throw new Error('Failed to derive presale PDA');
+            }
+
+            // Check if presale PDA already exists
+            const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+            if (presaleAccountInfo) {
+                throw new Error('Presale account already initialized for this seed and admin');
+            }
+
+            const vaultDogPda = findProgramAddress([
+                presalePda.pda.toBuffer(),
+                new Uint8Array([6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169]),
+                tokenMint.toBuffer()
+            ], new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'));
+
+            const vaultUsdPda = findProgramAddress([
+                presalePda.pda.toBuffer(),
+                new Uint8Array([6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169]),
+                usdMint.toBuffer()
+            ], new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'));
+
+            // Try to use Anchor if available
+            if (program) {
+                log('Using Anchor program for initialization...', 'info');
+                
+                const levels = [
+                    { tokenAmount: new anchor.BN(1000000), price: new anchor.BN(100000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                    { tokenAmount: new anchor.BN(2000000), price: new anchor.BN(110000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                    { tokenAmount: new anchor.BN(3000000), price: new anchor.BN(120000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                    { tokenAmount: new anchor.BN(4000000), price: new anchor.BN(130000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                    { tokenAmount: new anchor.BN(5000000), price: new anchor.BN(140000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                    { tokenAmount: new anchor.BN(6000000), price: new anchor.BN(150000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+                    { tokenAmount: new anchor.BN(7000000), price: new anchor.BN(160000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) }
+                ];
+
+                const tx = await program.methods.initPresale(
+                    new anchor.BN(seed),
+                    tokenMint,
+                    usdMint,
+                    new anchor.BN(1000000), // softcap_amount
+                    new anchor.BN(10000000), // hardcap_amount
+                    new anchor.BN(14000000), // deposit_token_amount
+                    levels,
+                    new anchor.BN(0), // sold_token_amount
+                    new anchor.BN(Math.floor(Date.now() / 1000)), // start_time
+                    new anchor.BN(Math.floor(Date.now() / 1000) + 7 * 24 * 3600) // end_time (7 days from now)
+                )
+                .accounts({
+                    admin: wallet.publicKey,
+                    tokenMintAddress: tokenMint,
+                    usdMint: usdMint,
+                    presale: presalePda.pda,
+                    vaultDog: vaultDogPda.pda,
+                    vaultUsd: vaultUsdPda.pda,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                    tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+                    associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
+                })
+                .rpc();
+                
+                log(`Presale initialized with Anchor! Tx: ${tx}`, 'success');
+                
+            } else {
+                // Fallback to manual transaction building
+                log('Using manual transaction building...', 'warning');
+                
+                const programId = new solanaWeb3.PublicKey(PROGRAM_ID);
+
+                // Helper function to serialize u64
+                const serializeU64 = (value) => {
+                    const buffer = new Uint8Array(8);
+                    const dataView = new DataView(buffer.buffer);
+                    dataView.setBigUint64(0, BigInt(value), true);
+                    return buffer;
+                };
+
+                // Helper function to serialize Level struct
+                const serializeLevel = (level) => {
+                    return new Uint8Array([
+                        ...serializeU64(level.tokenAmount),
+                        ...serializeU64(level.price),
+                        ...serializeU64(level.softCap),
+                        ...serializeU64(level.tokensSold)
+                    ]);
+                };
+
+                // Serialize levels array (7 levels)
+                const levels = [
+                    { tokenAmount: 1000000, price: 100000, softCap: 0, tokensSold: 0 },
+                    { tokenAmount: 2000000, price: 110000, softCap: 0, tokensSold: 0 },
+                    { tokenAmount: 3000000, price: 120000, softCap: 0, tokensSold: 0 },
+                    { tokenAmount: 4000000, price: 130000, softCap: 0, tokensSold: 0 },
+                    { tokenAmount: 5000000, price: 140000, softCap: 0, tokensSold: 0 },
+                    { tokenAmount: 6000000, price: 150000, softCap: 0, tokensSold: 0 },
+                    { tokenAmount: 7000000, price: 160000, softCap: 0, tokensSold: 0 }
+                ];
+
+                const levelsData = new Uint8Array(levels.flatMap(level => Array.from(serializeLevel(level))));
+
+                // Create instruction data
+                const instructionData = new Uint8Array([
+                    ...[172, 248, 47, 226, 223, 52, 94, 217], // discriminator
+                    ...seedBuffer,
+                    ...tokenMint.toBytes(),
+                    ...usdMint.toBytes(),
+                    ...serializeU64(1000000), // softcap_amount
+                    ...serializeU64(10000000), // hardcap_amount
+                    ...serializeU64(14000000), // deposit_token_amount
+                    ...levelsData,
+                    ...serializeU64(0), // sold_token_amount
+                    ...serializeU64(Math.floor(Date.now() / 1000)), // start_time
+                    ...serializeU64(Math.floor(Date.now() / 1000) + 7 * 24 * 3600) // end_time
                 ]);
-            };
 
-            // Serialize levels array (7 levels)
-            const levels = [
-                { tokenAmount: 1000000, price: 100000, softCap: 0, tokensSold: 0 },
-                { tokenAmount: 2000000, price: 110000, softCap: 0, tokensSold: 0 },
-                { tokenAmount: 3000000, price: 120000, softCap: 0, tokensSold: 0 },
-                { tokenAmount: 4000000, price: 130000, softCap: 0, tokensSold: 0 },
-                { tokenAmount: 5000000, price: 140000, softCap: 0, tokensSold: 0 },
-                { tokenAmount: 6000000, price: 150000, softCap: 0, tokensSold: 0 },
-                { tokenAmount: 7000000, price: 160000, softCap: 0, tokensSold: 0 }
-            ];
+                const instruction = new solanaWeb3.TransactionInstruction({
+                    keys: [
+                        { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                        { pubkey: tokenMint, isSigner: false, isWritable: false },
+                        { pubkey: usdMint, isSigner: false, isWritable: false },
+                        { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                        { pubkey: vaultDogPda.pda, isSigner: false, isWritable: true },
+                        { pubkey: vaultUsdPda.pda, isSigner: false, isWritable: true },
+                        { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+                        { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
+                        { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
+                    ],
+                    programId: programId,
+                    data: instructionData
+                });
 
-            const levelsData = new Uint8Array(levels.flatMap(level => Array.from(serializeLevel(level))));
+                const transaction = new solanaWeb3.Transaction().add(instruction);
+                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+                transaction.recentBlockhash = blockhash;
+                transaction.feePayer = wallet.publicKey;
 
-            // Create instruction data
-            const instructionData = new Uint8Array([
-                ...[172, 248, 47, 226, 223, 52, 94, 217], // discriminator
-                ...seedBuffer,
-                ...tokenMint.toBytes(),
-                ...usdMint.toBytes(),
-                ...serializeU64(1000000), // softcap_amount
-                ...serializeU64(10000000), // hardcap_amount
-                ...serializeU64(14000000), // deposit_token_amount
-                ...levelsData,
-                ...serializeU64(0), // sold_token_amount
-                ...serializeU64(Math.floor(Date.now() / 1000)), // start_time
-                ...serializeU64(Math.floor(Date.now() / 1000) + 7 * 24 * 3600) // end_time
-            ]);
+                log('Sending transaction...', 'info');
+                const signedTransaction = await wallet.signTransaction(transaction);
+                const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                    skipPreflight: false, // Run preflight checks to catch errors early
+                    maxRetries: 0 // Prevent automatic retries to avoid duplicate submissions
+                });
+                
+                log(`Transaction sent: ${signature}`, 'success');
+                log('Waiting for confirmation...', 'info');
+                
+                await connection.confirmTransaction({
+                    signature,
+                    blockhash,
+                    lastValidBlockHeight
+                }, 'confirmed');
+                
+                log(`Presale initialized successfully!`, 'success');
+            }
 
-            const instruction = new solanaWeb3.TransactionInstruction({
-                keys: [
-                    { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
-                    { pubkey: tokenMint, isSigner: false, isWritable: false },
-                    { pubkey: usdMint, isSigner: false, isWritable: false },
-                    { pubkey: presalePda.pda, isSigner: false, isWritable: true },
-                    { pubkey: vaultDogPda.pda, isSigner: false, isWritable: true },
-                    { pubkey: vaultUsdPda.pda, isSigner: false, isWritable: true },
-                    { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
-                    { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
-                    { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
-                ],
-                programId: programId,
-                data: instructionData
-            });
-
-            const transaction = new solanaWeb3.Transaction().add(instruction);
-            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-            transaction.recentBlockhash = blockhash;
-            transaction.feePayer = wallet.publicKey;
-
-            log('Sending transaction...', 'info');
-            const signedTransaction = await wallet.signTransaction(transaction);
-            const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-                skipPreflight: false, // Run preflight checks to catch errors early
-                maxRetries: 0 // Prevent automatic retries to avoid duplicate submissions
-            });
-            
-            log(`Transaction sent: ${signature}`, 'success');
-            log('Waiting for confirmation...', 'info');
-            
-            await connection.confirmTransaction({
-                signature,
-                blockhash,
-                lastValidBlockHeight
-            }, 'confirmed');
-            
-            log(`Presale initialized successfully!`, 'success');
+        } catch (error) {
+            log(`Failed to initialize presale: ${error.message}`, 'error');
+            console.error('Full error:', error);
+        } finally {
+            button.disabled = false;
+            button.textContent = 'Initialize Presale';
         }
-
-    } catch (error) {
-        log(`Failed to initialize presale: ${error.message}`, 'error');
-        console.error('Full error:', error);
-    } finally {
-        button.disabled = false;
-        button.textContent = 'Initialize Presale';
     }
-}
+    async function startPresale() {
+        const button = document.getElementById('startPresale');
+        button.disabled = true;
+        button.textContent = 'Starting...';
 
+        try {
+            if (!wallet || !connection) {
+                throw new Error('Please connect your wallet first');
+            }
+
+            log('Starting presale...');
+
+            const seedInput = document.getElementById('presaleSeed').value;
+            const seed = parseInt(seedInput);
+
+            const seedBuffer = new Uint8Array(8);
+            const dataView = new DataView(seedBuffer.buffer);
+            dataView.setBigUint64(0, BigInt(seed), true);
+
+            const presalePda = findProgramAddress([
+                new TextEncoder().encode('dogx_presale'),
+                wallet.publicKey.toBuffer(),
+                seedBuffer
+            ], PROGRAM_ID);
+
+            if (!presalePda) {
+                throw new Error('Failed to derive presale PDA');
+            }
+
+            const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+            if (!presaleAccountInfo) {
+                throw new Error('Presale account not found. Please initialize the presale first.');
+            }
+
+            if (program) {
+                log('Using Anchor program to start presale...', 'info');
+                const tx = await program.methods.startPresale()
+                    .accounts({
+                        admin: wallet.publicKey,
+                        presale: presalePda.pda,
+                    })
+                    .rpc({ commitment: 'confirmed' });
+                log(`Presale started successfully! Tx: ${tx}`, 'success');
+            } else {
+                log('Using manual transaction building...', 'warning');
+                const instructionData = new Uint8Array([57, 19, 73, 191, 195, 254, 45, 223]); // start_presale discriminator
+                const instruction = new solanaWeb3.TransactionInstruction({
+                    keys: [
+                        { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                        { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                    ],
+                    programId: new solanaWeb3.PublicKey(PROGRAM_ID),
+                    data: instructionData
+                });
+
+                const transaction = new solanaWeb3.Transaction().add(instruction);
+                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+                transaction.recentBlockhash = blockhash;
+                transaction.feePayer = wallet.publicKey;
+
+                const signedTransaction = await wallet.signTransaction(transaction);
+                const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                    skipPreflight: false,
+                    maxRetries: 0
+                });
+                await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+                log(`Presale started successfully! Tx: ${signature}`, 'success');
+            }
+
+        } catch (error) {
+            log(`Failed to start presale: ${error.message}`, 'error');
+            console.error('Full error:', error);
+        } finally {
+            button.disabled = false;
+            button.textContent = 'Start Presale';
+        }
+    }
     // Deposit tokens to presale
     async function depositTokens() {
     const button = document.getElementById('depositTokens');
@@ -796,7 +3134,7 @@
         const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
         const usdMintInput = document.getElementById('usdMintAddress').value.trim();
         const seedInput = document.getElementById('presaleSeed').value;
-        const depositAmount = 190000000 * 10**6; // 196,000,000 tokens with 6 decimals, matching test file
+        const depositAmount = 190000 * 10**6; // 196,000 tokens with 6 decimals, matching test file
 
         if (!tokenMintInput || !usdMintInput || !seedInput) {
             throw new Error('Please provide token mint, USD mint addresses, and seed');
@@ -928,62 +3266,558 @@
             button.textContent = 'Buying...';
 
             try {
-                if (!wallet || !connection) {
-                    throw new Error('Please connect your wallet first');
+                if (!wallet ) {
+                    throw new Error('Please connect your wallet and initialize the program');
                 }
 
                 log('Preparing to buy tokens...');
-                
+
                 const paymentAmount = document.getElementById('paymentAmount').value;
+                const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
                 const usdMintInput = document.getElementById('usdMintAddress').value.trim();
-                
+                const seedInput = document.getElementById('presaleSeed').value;
+
                 if (!paymentAmount || paymentAmount <= 0) {
                     throw new Error('Please enter a valid payment amount');
                 }
-
-                if (!usdMintInput) {
-                    throw new Error('Please provide USD mint address');
+                if (!tokenMintInput || !usdMintInput || !seedInput) {
+                    throw new Error('Please provide token mint, USD mint addresses, and seed');
                 }
 
-                // Convert to smallest unit (assuming 6 decimals for USDC)
-                const paymentLamports = Math.floor(parseFloat(paymentAmount) * 1000000);
-                
-                log(`Attempting to buy tokens with ${paymentAmount} USDC (${paymentLamports} lamports)...`, 'info');
-                
-                // For now, just log what would happen
-                log('🚧 Buy tokens function needs full implementation', 'warning');
-                log('This would create a buy_tokens instruction with proper account derivations', 'warning');
-                
-                // You would need to:
-                // 1. Derive all required PDAs (presale, user account, token accounts)
-                // 2. Create proper instruction data with payment amount
-                // 3. Build transaction with all required accounts
-                // 4. Sign and send transaction
+                const paymentLamports = Math.floor(parseFloat(paymentAmount) * 1000000); // Assuming 6 decimals for USDC
+                const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
+                const usdMint = new solanaWeb3.PublicKey(usdMintInput);
+                const seed = parseInt(seedInput);
+
+                // Derive PDAs
+                const seedBuffer = new Uint8Array(8);
+                const dataView = new DataView(seedBuffer.buffer);
+                dataView.setBigUint64(0, BigInt(seed), true);
+
+                const presalePda = findProgramAddress([
+                    new TextEncoder().encode('dogx_presale'),
+                    wallet.publicKey.toBuffer(),
+                    seedBuffer
+                ], PROGRAM_ID);
+
+                if (!presalePda) {
+                    throw new Error('Failed to derive presale PDA');
+                }
+
+                const userPda = findProgramAddress([
+                    new TextEncoder().encode('user'),
+                    presalePda.pda.toBuffer(),
+                    wallet.publicKey.toBuffer()
+                ], PROGRAM_ID);
+
+                const buyerAta = await getAssociatedTokenAddress(usdMint, wallet.publicKey);
+                const vaultUsd = await getAssociatedTokenAddress(usdMint, presalePda.pda, true);
+
+                // Check presale account
+                const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+                if (!presaleAccountInfo) {
+                    throw new Error('Presale account not found. Please initialize the presale first.');
+                }
+
+                // Check buyer USDC balance
+                const buyerBalance = await connection.getTokenAccountBalance(buyerAta);
+                if (!buyerBalance.value || buyerBalance.value.uiAmount < parseFloat(paymentAmount)) {
+                    throw new Error(`Insufficient USDC balance: ${buyerBalance.value?.uiAmount || 0} USDC`);
+                }
+
+                if (program) {
+                    log('Using Anchor program for buying tokens...', 'info');
+
+                    const tx = await program.methods.buyTokens(new anchor.BN(paymentLamports))
+                        .accounts({
+                            buyer: wallet.publicKey,
+                            tokenMintAddress: tokenMint,
+                            usdMint: usdMint,
+                            presale: presalePda.pda,
+                            buyerAta: buyerAta,
+                            vaultUsd: vaultUsd,
+                            user: userPda.pda,
+                            systemProgram: solanaWeb3.SystemProgram.programId,
+                            associatedTokenProgram: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'),
+                            tokenProgram: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+                        })
+                        .rpc();
+
+                    log(`Tokens bought successfully! Tx: ${tx}`, 'success');
+                } else {
+                    log('Using manual transaction building for buy tokens...', 'warning');
+
+                    const programId = new solanaWeb3.PublicKey(PROGRAM_ID);
+                    const serializeU64 = (value) => {
+                        const buffer = new Uint8Array(8);
+                        const dataView = new DataView(buffer.buffer);
+                        dataView.setBigUint64(0, BigInt(value), true);
+                        return buffer;
+                    };
+
+                    const instructionData = new Uint8Array([
+                        ...[189, 21, 230, 133, 247, 2, 110, 42], // buy_tokens discriminator
+                        ...serializeU64(paymentLamports)
+                    ]);
+
+                    const instruction = new solanaWeb3.TransactionInstruction({
+                        keys: [
+                            { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                            { pubkey: tokenMint, isSigner: false, isWritable: false },
+                            { pubkey: usdMint, isSigner: false, isWritable: false },
+                            { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                            { pubkey: buyerAta, isSigner: false, isWritable: true },
+                            { pubkey: vaultUsd, isSigner: false, isWritable: true },
+                            { pubkey: userPda.pda, isSigner: false, isWritable: true },
+                            { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+                            { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
+                            { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
+                        ],
+                        programId: programId,
+                        data: instructionData
+                    });
+
+                    const transaction = new solanaWeb3.Transaction().add(instruction);
+                    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+                    transaction.recentBlockhash = blockhash;
+                    transaction.feePayer = wallet.publicKey;
+
+                    log('Sending buy tokens transaction...', 'info');
+                    const signedTransaction = await wallet.signTransaction(transaction);
+                    const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                        skipPreflight: false,
+                        maxRetries: 0
+                    });
+
+                    log(`Transaction sent: ${signature}`, 'success');
+                    log('Waiting for confirmation...', 'info');
+
+                    await connection.confirmTransaction({
+                        signature,
+                        blockhash,
+                        lastValidBlockHeight
+                    }, 'confirmed');
+
+                    log(`Tokens bought successfully! Tx: ${signature}`, 'success');
+                }
 
             } catch (error) {
                 log(`Failed to buy tokens: ${error.message}`, 'error');
+                console.error('Full error:', error);
             } finally {
                 button.disabled = false;
                 button.textContent = 'Buy Tokens';
             }
         }
-
         // Placeholder functions for other operations
+        // Claim Tokens: Allows buyers to claim purchased tokens after the presale ends
         async function claimTokens() {
-            log('🚧 Claim tokens function - needs implementation', 'warning');
+            const button = document.getElementById('claimTokens');
+            button.disabled = true;
+            button.textContent = 'Claiming...';
+
+            try {
+                if (!wallet || !connection) {
+                    throw new Error('Please connect your wallet first');
+                }
+
+                log('Claiming tokens...');
+
+                const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
+                const usdMintInput = document.getElementById('usdMintAddress').value.trim();
+                const seedInput = document.getElementById('presaleSeed').value;
+
+                if (!tokenMintInput || !usdMintInput || !seedInput) {
+                    throw new Error('Please provide token mint, USD mint addresses, and seed');
+                }
+
+                const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
+                const usdMint = new solanaWeb3.PublicKey(usdMintInput);
+                const seed = parseInt(seedInput);
+
+                // Derive PDAs
+                const seedBuffer = new Uint8Array(8);
+                const dataView = new DataView(seedBuffer.buffer);
+                dataView.setBigUint64(0, BigInt(seed), true);
+
+                const presalePda = findProgramAddress([
+                    new TextEncoder().encode('dogx_presale'),
+                    wallet.publicKey.toBuffer(),
+                    seedBuffer
+                ], PROGRAM_ID);
+
+                if (!presalePda) {
+                    throw new Error('Failed to derive presale PDA');
+                }
+
+                const userPda = findProgramAddress([
+                    new TextEncoder().encode('user'),
+                    presalePda.pda.toBuffer(),
+                    wallet.publicKey.toBuffer()
+                ], PROGRAM_ID);
+
+                const buyerAta = await getAssociatedTokenAddress(tokenMint, wallet.publicKey);
+                const vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda.pda, true);
+
+                // Check if presale account exists
+                const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+                if (!presaleAccountInfo) {
+                    throw new Error('Presale account not found. Please initialize the presale first.');
+                }
+
+                if (program) {
+                    log('Using Anchor program for claiming tokens...', 'info');
+                    const tx = await program.methods.claimToken()
+                        .accounts({
+                            buyer: wallet.publicKey,
+                            usdMint: usdMint,
+                            tokenMintAddress: tokenMint,
+                            buyerAta: buyerAta,
+                            vaultDog: vaultDog,
+                            presale: presalePda.pda,
+                            user: userPda.pda,
+                            tokenProgram: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+                            associatedTokenProgram: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'),
+                            systemProgram: solanaWeb3.SystemProgram.programId,
+                        })
+                        .rpc({ commitment: 'confirmed' });
+                    log(`Tokens claimed successfully! Tx: ${tx}`, 'success');
+                } else {
+                    log('Using manual transaction building for claim tokens...', 'warning');
+                    const instructionData = new Uint8Array([116, 206, 27, 191, 166, 19, 0, 73]); // claim_token discriminator
+                    const instruction = new solanaWeb3.TransactionInstruction({
+                        keys: [
+                            { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                            { pubkey: usdMint, isSigner: false, isWritable: false },
+                            { pubkey: tokenMint, isSigner: false, isWritable: false },
+                            { pubkey: buyerAta, isSigner: false, isWritable: true },
+                            { pubkey: vaultDog, isSigner: false, isWritable: true },
+                            { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                            { pubkey: userPda.pda, isSigner: false, isWritable: true },
+                            { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
+                            { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
+                            { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+                        ],
+                        programId: new solanaWeb3.PublicKey(PROGRAM_ID),
+                        data: instructionData
+                    });
+
+                    const transaction = new solanaWeb3.Transaction().add(instruction);
+                    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+                    transaction.recentBlockhash = blockhash;
+                    transaction.feePayer = wallet.publicKey;
+
+                    const signedTransaction = await wallet.signTransaction(transaction);
+                    const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                        skipPreflight: false,
+                        maxRetries: 0
+                    });
+                    await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+                    log(`Tokens claimed successfully! Tx: ${signature}`, 'success');
+                }
+
+            } catch (error) {
+                log(`Failed to claim tokens: ${error.message}`, 'error');
+                console.error('Full error:', error);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Claim Tokens';
+            }
         }
 
+        // End Presale: Allows the admin to end the presale
         async function endPresale() {
-            log('🚧 End presale function - needs implementation', 'warning');
+            const button = document.getElementById('endPresale');
+            button.disabled = true;
+            button.textContent = 'Ending...';
+
+            try {
+                if (!wallet || !connection) {
+                    throw new Error('Please connect your wallet first');
+                }
+
+                log('Ending presale...');
+
+                const seedInput = document.getElementById('presaleSeed').value;
+                const seed = parseInt(seedInput);
+
+                const seedBuffer = new Uint8Array(8);
+                const dataView = new DataView(seedBuffer.buffer);
+                dataView.setBigUint64(0, BigInt(seed), true);
+
+                const presalePda = findProgramAddress([
+                    new TextEncoder().encode('dogx_presale'),
+                    wallet.publicKey.toBuffer(),
+                    seedBuffer
+                ], PROGRAM_ID);
+
+                if (!presalePda) {
+                    throw new Error('Failed to derive presale PDA');
+                }
+
+                const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+                if (!presaleAccountInfo) {
+                    throw new Error('Presale account not found. Please initialize the presale first.');
+                }
+
+                if (program) {
+                    log('Using Anchor program to end presale...', 'info');
+                    const tx = await program.methods.endPresale()
+                        .accounts({
+                            admin: wallet.publicKey,
+                            presale: presalePda.pda,
+                            systemProgram: solanaWeb3.SystemProgram.programId,
+                        })
+                        .rpc({ commitment: 'confirmed' });
+                    log(`Presale ended successfully! Tx: ${tx}`, 'success');
+                } else {
+                    log('Using manual transaction building...', 'warning');
+                    const instructionData = new Uint8Array([54, 154, 35, 93, 29, 58, 10, 208]); // end_presale discriminator
+                    const instruction = new solanaWeb3.TransactionInstruction({
+                        keys: [
+                            { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                            { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                            { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+                        ],
+                        programId: new solanaWeb3.PublicKey(PROGRAM_ID),
+                        data: instructionData
+                    });
+
+                    const transaction = new solanaWeb3.Transaction().add(instruction);
+                    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+                    transaction.recentBlockhash = blockhash;
+                    transaction.feePayer = wallet.publicKey;
+
+                    const signedTransaction = await wallet.signTransaction(transaction);
+                    const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                        skipPreflight: false,
+                        maxRetries: 0
+                    });
+                    await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+                    log(`Presale ended successfully! Tx: ${signature}`, 'success');
+                }
+
+            } catch (error) {
+                log(`Failed to end presale: ${error.message}`, 'error');
+                console.error('Full error:', error);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'End Presale';
+            }
         }
 
+        // Withdraw Tokens: Allows the admin to withdraw unsold tokens from the presale vault
         async function withdrawTokens() {
-            log('🚧 Withdraw tokens function - needs implementation', 'warning');
+            const button = document.getElementById('withdrawTokens');
+            button.disabled = true;
+            button.textContent = 'Withdrawing...';
+
+            try {
+                if (!wallet || !connection) {
+                    throw new Error('Please connect your wallet first');
+                }
+
+                log('Withdrawing tokens...');
+
+                const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
+                const usdMintInput = document.getElementById('usdMintAddress').value.trim();
+                const seedInput = document.getElementById('presaleSeed').value;
+
+                if (!tokenMintInput || !usdMintInput || !seedInput) {
+                    throw new Error('Please provide token mint, USD mint addresses, and seed');
+                }
+
+                const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
+                const usdMint = new solanaWeb3.PublicKey(usdMintInput);
+                const seed = parseInt(seedInput);
+
+                // Derive PDAs
+                const seedBuffer = new Uint8Array(8);
+                const dataView = new DataView(seedBuffer.buffer);
+                dataView.setBigUint64(0, BigInt(seed), true);
+
+                const presalePda = findProgramAddress([
+                    new TextEncoder().encode('dogx_presale'),
+                    wallet.publicKey.toBuffer(),
+                    seedBuffer
+                ], PROGRAM_ID);
+
+                if (!presalePda) {
+                    throw new Error('Failed to derive presale PDA');
+                }
+
+                const adminAta = await getAssociatedTokenAddress(tokenMint, wallet.publicKey);
+                const vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda.pda, true);
+
+                const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+                if (!presaleAccountInfo) {
+                    throw new Error('Presale account not found. Please initialize the presale first.');
+                }
+
+                if (program) {
+                    log('Using Anchor program for withdrawing tokens...', 'info');
+                    const tx = await program.methods.withdrawToken()
+                        .accounts({
+                            admin: wallet.publicKey,
+                            usdMint: usdMint,
+                            tokenMintAddress: tokenMint,
+                            adminAta: adminAta,
+                            vaultDog: vaultDog,
+                            presale: presalePda.pda,
+                            tokenProgram: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+                            associatedTokenProgram: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'),
+                            systemProgram: solanaWeb3.SystemProgram.programId,
+                        })
+                        .rpc({ commitment: 'confirmed' });
+                    log(`Tokens withdrawn successfully! Tx: ${tx}`, 'success');
+                } else {
+                    log('Using manual transaction building for withdraw tokens...', 'warning');
+                    const instructionData = new Uint8Array([136, 235, 181, 5, 101, 109, 57, 81]); // withdraw_token discriminator
+                    const instruction = new solanaWeb3.TransactionInstruction({
+                        keys: [
+                            { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                            { pubkey: usdMint, isSigner: false, isWritable: false },
+                            { pubkey: tokenMint, isSigner: false, isWritable: false },
+                            { pubkey: adminAta, isSigner: false, isWritable: true },
+                            { pubkey: vaultDog, isSigner: false, isWritable: true },
+                            { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                            { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
+                            { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
+                            { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+                        ],
+                        programId: new solanaWeb3.PublicKey(PROGRAM_ID),
+                        data: instructionData
+                    });
+
+                    const transaction = new solanaWeb3.Transaction().add(instruction);
+                    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+                    transaction.recentBlockhash = blockhash;
+                    transaction.feePayer = wallet.publicKey;
+
+                    const signedTransaction = await wallet.signTransaction(transaction);
+                    const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                        skipPreflight: false,
+                        maxRetries: 0
+                    });
+                    await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+                    log(`Tokens withdrawn successfully! Tx: ${signature}`, 'success');
+                }
+
+            } catch (error) {
+                log(`Failed to withdraw tokens: ${error.message}`, 'error');
+                console.error('Full error:', error);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Withdraw Tokens';
+            }
         }
 
+        // Withdraw USD: Allows the admin to withdraw collected USDC from the presale
         async function withdrawUsd() {
-            log('🚧 Withdraw USD function - needs implementation', 'warning');
+            const button = document.getElementById('withdrawUsd');
+            button.disabled = true;
+            button.textContent = 'Withdrawing...';
+
+            try {
+                if (!wallet || !connection) {
+                    throw new Error('Please connect your wallet first');
+                }
+
+                log('Withdrawing USD...');
+
+                const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
+                const usdMintInput = document.getElementById('usdMintAddress').value.trim();
+                const seedInput = document.getElementById('presaleSeed').value;
+
+                if (!tokenMintInput || !usdMintInput || !seedInput) {
+                    throw new Error('Please provide token mint, USD mint addresses, and seed');
+                }
+
+                const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
+                const usdMint = new solanaWeb3.PublicKey(usdMintInput);
+                const seed = parseInt(seedInput);
+
+                // Derive PDAs
+                const seedBuffer = new Uint8Array(8);
+                const dataView = new DataView(seedBuffer.buffer);
+                dataView.setBigUint64(0, BigInt(seed), true);
+
+                const presalePda = findProgramAddress([
+                    new TextEncoder().encode('dogx_presale'),
+                    wallet.publicKey.toBuffer(),
+                    seedBuffer
+                ], PROGRAM_ID);
+
+                if (!presalePda) {
+                    throw new Error('Failed to derive presale PDA');
+                }
+
+                const adminAta = await getAssociatedTokenAddress(usdMint, wallet.publicKey);
+                const vaultUsd = await getAssociatedTokenAddress(usdMint, presalePda.pda, true);
+
+                const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+                if (!presaleAccountInfo) {
+                    throw new Error('Presale account not found. Please initialize the presale first.');
+                }
+
+                if (program) {
+                    log('Using Anchor program for withdrawing USD...', 'info');
+                    const tx = await program.methods.withdrawUsd()
+                        .accounts({
+                            admin: wallet.publicKey,
+                            usdMint: usdMint,
+                            tokenMintAddress: tokenMint,
+                            adminAta: adminAta,
+                            vaultUsd: vaultUsd,
+                            presale: presalePda.pda,
+                            tokenProgram: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+                            associatedTokenProgram: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'),
+                            systemProgram: solanaWeb3.SystemProgram.programId,
+                        })
+                        .rpc({ commitment: 'confirmed' });
+                    log(`USD withdrawn successfully! Tx: ${tx}`, 'success');
+                } else {
+                    log('Using manual transaction building for withdraw USD...', 'warning');
+                    const instructionData = new Uint8Array([8, 46, 49, 84, 17, 127, 139, 71]); // withdraw_usd discriminator
+                    const instruction = new solanaWeb3.TransactionInstruction({
+                        keys: [
+                            { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                            { pubkey: usdMint, isSigner: false, isWritable: false },
+                            { pubkey: tokenMint, isSigner: false, isWritable: false },
+                            { pubkey: adminAta, isSigner: false, isWritable: true },
+                            { pubkey: vaultUsd, isSigner: false, isWritable: true },
+                            { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                            { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
+                            { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
+                            { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+                        ],
+                        programId: new solanaWeb3.PublicKey(PROGRAM_ID),
+                        data: instructionData
+                    });
+
+                    const transaction = new solanaWeb3.Transaction().add(instruction);
+                    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+                    transaction.recentBlockhash = blockhash;
+                    transaction.feePayer = wallet.publicKey;
+
+                    const signedTransaction = await wallet.signTransaction(transaction);
+                    const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                        skipPreflight: false,
+                        maxRetries: 0
+                    });
+                    await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+                    log(`USD withdrawn successfully! Tx: ${signature}`, 'success');
+                }
+
+            } catch (error) {
+                log(`Failed to withdraw USD: ${error.message}`, 'error');
+                console.error('Full error:', error);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Withdraw USD';
+            }
         }
+
 
         async function claimRefund() {
             log('🚧 Claim refund function - needs implementation', 'warning');
@@ -993,6 +3827,7 @@
         document.getElementById('connectWallet').addEventListener('click', connectWallet);
         document.getElementById('disconnectWallet').addEventListener('click', disconnectWallet);
         document.getElementById('initPresale').addEventListener('click', initializePresale);
+        document.getElementById('startPresale').addEventListener('click', startPresale);
         document.getElementById('depositTokens').addEventListener('click', depositTokens);
         document.getElementById('buyTokens').addEventListener('click', buyTokens);
         document.getElementById('claimTokens').addEventListener('click', claimTokens);
