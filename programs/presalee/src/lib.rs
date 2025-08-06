@@ -80,5 +80,10 @@ pub mod presalee {
         ctx.accounts.claim_refund()?;
         Ok(())
     }
+
+    pub fn close_presale(ctx: Context<ClosePresale>) -> Result<()> {
+        ctx.accounts.close_presale()?;
+        Ok(())
+    }
 }
 

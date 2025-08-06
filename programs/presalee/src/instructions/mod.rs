@@ -8,6 +8,7 @@ pub mod withdraw_usd;
 pub mod withdraw_token;
 pub mod end_presale;
 pub mod claim_refund;
+pub mod close_presale;
 
 pub use init_presale::*;
 pub use deposit_token::*;
@@ -19,3 +20,4 @@ pub use withdraw_usd::*;
 pub use withdraw_token::*;
 pub use end_presale::*;
 pub use claim_refund::*;
+pub use close_presale::*;
