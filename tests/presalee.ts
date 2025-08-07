@@ -11,11 +11,13 @@ import {
   createAssociatedTokenAccount,
   mintTo,
   getAssociatedTokenAddress,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { expect } from "chai";
 
-import adminSecretArray from "./wallets/wallet.json";
-import userSecretArray from "./wallets/wallet2.json";
+import adminSecretArray from "./wallets/wallet2.json";
+// Import a different wallet for user, or generate one
+import userSecretArray from "./wallets/wallet.json"; // You should use a different wallet
 
 describe("presalee", () => {
   // Configure the client to use the local cluster
@@ -40,117 +42,212 @@ describe("presalee", () => {
   let presaleUsdAccount: anchor.web3.PublicKey;
   let vaultDog: anchor.web3.PublicKey;
   let vaultUsd: anchor.web3.PublicKey;
+
+  // 998425000
   
   // Test parameters
-  const seed = new anchor.BN(12345);
+  const seed = new anchor.BN(56432);
   const seedBytes = seed.toArrayLike(Buffer, 'le', 8);
   const softcapAmount = new anchor.BN(1000 * 10**6); // 1000 tokens (6 decimals)
   const hardcapAmount = new anchor.BN(10000 * 10**6); // 10000 tokens
-  const depositTokenAmount = new anchor.BN(14000 * 10**6); // 15000 tokens
+  const depositTokenAmount = new anchor.BN(194000000 * 10**6); // 14000 tokens
   const soldTokenAmount = new anchor.BN(0);
   const startTime = new anchor.BN(Math.floor(Date.now() / 1000));
   const endTime = new anchor.BN(Math.floor(Date.now() / 1000) + 3600 * 24 * 7); // 1 week
   
   // Define presale levels (example tier structure)
   const levels = [
-    { tokenAmount: new anchor.BN(1000 * 10**6), price: new anchor.BN(100000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) }, // Level 0: $0.1 per token, max 1000 tokens
-    { tokenAmount: new anchor.BN(2000 * 10**6), price: new anchor.BN(120000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) }, // Level 1: $0.12 per token, max 2000 tokens
-    { tokenAmount: new anchor.BN(3000 * 10**6), price: new anchor.BN(150000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) }, // Level 2: $0.15 per token, max 3000 tokens
-    { tokenAmount: new anchor.BN(2000 * 10**6), price: new anchor.BN(180000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) }, // Level 3: $0.18 per token, max 2000 tokens
-    { tokenAmount: new anchor.BN(1500 * 10**6), price: new anchor.BN(200000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) }, // Level 4: $0.20 per token, max 1500 tokens
-    { tokenAmount: new anchor.BN(500 * 10**6), price: new anchor.BN(250000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },  // Level 5: $0.25 per token, max 500 tokens
-    { tokenAmount: new anchor.BN(0), price: new anchor.BN(300000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },            // Level 6: $0.30 per token, unlimited
+    { tokenAmount: new anchor.BN(5000000 * 10**6), price: new anchor.BN(10000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(10000000 * 10**6), price: new anchor.BN(20000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(25000000 * 10**6), price: new anchor.BN(30000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(66000000 * 10**6), price: new anchor.BN(45000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(62000000 * 10**6), price: new anchor.BN(55000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(22000000 * 10**6), price: new anchor.BN(65000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(5000000), price: new anchor.BN(75000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
   ];
 
   before(async () => {
     // Generate keypairs
     authority = Keypair.fromSecretKey(Uint8Array.from(adminSecretArray));
+    // Generate a new user instead of using the same wallet
     user = Keypair.fromSecretKey(Uint8Array.from(userSecretArray));
-    // user = Keypair.generate();
-
-    // Airdrop SOL to accounts
-    // await provider.connection.requestAirdrop(authority.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL)
-    // await provider.connection.requestAirdrop(user.publicKey, 2 * anchor.web3.LAMPORTS_PER_SOL);
-    
-    // Wait for airdrops to confirm
-    // await new Promise(resolve => setTimeout(resolve, 1000));
 
     console.log("Authority public key:", authority.publicKey.toBase58());
     console.log("User public key:", user.publicKey.toBase58());
+
+    // Airdrop SOL to both accounts
+    try {
+      const authorityAirdrop = await provider.connection.requestAirdrop(
+        authority.publicKey, 
+        2 * anchor.web3.LAMPORTS_PER_SOL
+      );
+      const userAirdrop = await provider.connection.requestAirdrop(
+        user.publicKey, 
+        2 * anchor.web3.LAMPORTS_PER_SOL
+      );
+      
+      // Wait for airdrops to confirm
+      await provider.connection.confirmTransaction(authorityAirdrop);
+      await provider.connection.confirmTransaction(userAirdrop);
+      
+      // Wait a bit more to ensure transactions are processed
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    } catch (error) {
+      console.log("Airdrop failed, checking existing balance...", error.message);
+    }
 
     const authorityBalance = await provider.connection.getBalance(authority.publicKey);
     console.log("Authority balance:", authorityBalance / anchor.web3.LAMPORTS_PER_SOL, "SOL");
     const userBalance = await provider.connection.getBalance(user.publicKey);
     console.log("User balance:", userBalance / anchor.web3.LAMPORTS_PER_SOL, "SOL");
+
     if (authorityBalance < 0.1 * anchor.web3.LAMPORTS_PER_SOL) {
         throw new Error("Authority account has insufficient SOL");
     }
+    if (userBalance < 0.1 * anchor.web3.LAMPORTS_PER_SOL) {
+        throw new Error("User account has insufficient SOL");
+    }
 
-    // Create token mints
-    tokenMint = await createMint(
-      provider.connection,
-      authority,
-      authority.publicKey,
-      null,
-      6 // 6 decimals
-    );
+    // Create NEW token mints instead of using hardcoded ones
+    try {
+      // tokenMint = await createMint(
+      //   provider.connection,
+      //   authority,
+      //   authority.publicKey,
+      //   null,
+      //   6 // 6 decimals
+      // );
+      tokenMint = new PublicKey("8ME8EAAmLegMSBae3DgN6LPznr6P3xaHAN8Pd7mMbJ3o")
+      console.log("Token mint created:", tokenMint.toBase58());
 
-    usdMint = await createMint(
-      provider.connection,
-      authority,
-      authority.publicKey,
-      null,
-      6 // 6 decimals (USDC-like)
-    );
+      // usdMint = await createMint(
+      //   provider.connection,
+      //   authority,
+      //   authority.publicKey,
+      //   null,
+      //   6 // 6 decimals (USDC-like)
+      // );
+      usdMint = new PublicKey("3MWScP9VFh4BQyWDFj5aR3doz6cSKTB2MRGnJB7vdz6P")
+      console.log("USD mint created:", usdMint.toBase58());
+    } catch (error) {
+      console.error("Error creating mints:", error);
+      throw error;
+    }
 
     // Create associated token accounts
-    authorityTokenAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      authority,
-      tokenMint,
-      authority.publicKey
-    );
+    try {
+      const existingAuthorityTokenAccount = await connection.getAccountInfo(
+        await getAssociatedTokenAddress(tokenMint, authority.publicKey)
+      );
 
-    authorityUsdAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      authority,
-      usdMint,
-      authority.publicKey
-    );
+      if (!existingAuthorityTokenAccount) {
+        authorityTokenAccount = await createAssociatedTokenAccount(
+          provider.connection,
+          authority,
+          tokenMint,
+          authority.publicKey
+        );
+      } else {
+        authorityTokenAccount = await getAssociatedTokenAddress(tokenMint, authority.publicKey);
+      }
+      const existingAuthorityUsdAccount = await connection.getAccountInfo(
+        await getAssociatedTokenAddress(usdMint, authority.publicKey)
+      );
 
-    userUsdAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      user,
-      usdMint,
-      user.publicKey
-    );
+      if (!existingAuthorityUsdAccount) {
+        authorityUsdAccount = await createAssociatedTokenAccount(
+          provider.connection,
+          authority,
+          usdMint,
+          authority.publicKey
+        );
+      } else {
+        authorityUsdAccount = await getAssociatedTokenAddress(usdMint, authority.publicKey);
+      }
+      const existingUserUsdAccount = await connection.getAccountInfo(
+        await getAssociatedTokenAddress(usdMint, user.publicKey)
+      );
+      
 
-   userTokenAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      user,
-      tokenMint,
-      user.publicKey
-    );
+      if (!existingUserUsdAccount) {
+        userUsdAccount = await createAssociatedTokenAccount(
+          provider.connection,
+          user,
+          usdMint,
+          user.publicKey
+        );
+      } else {
+        userUsdAccount = await getAssociatedTokenAddress(usdMint, user.publicKey);
+      }
+      const existingUserTokenAccount = await connection.getAccountInfo(
+        await getAssociatedTokenAddress(tokenMint, authority.publicKey)
+      );
+
+
+      if (!existingUserTokenAccount) {
+        userTokenAccount = await createAssociatedTokenAccount(
+          provider.connection,
+          user,
+          tokenMint,
+          user.publicKey
+        );
+      } else {
+        userTokenAccount = await getAssociatedTokenAddress(tokenMint, user.publicKey);
+      }
+
+      // authorityUsdAccount = await createAssociatedTokenAccount(
+      //   provider.connection,
+      //   authority,
+      //   usdMint,
+      //   authority.publicKey
+      // );
+
+      // userUsdAccount = await createAssociatedTokenAccount(
+      //   provider.connection,
+      //   user,
+      //   usdMint,
+      //   user.publicKey
+      // );
+
+      // userTokenAccount = await createAssociatedTokenAccount(
+      //   provider.connection,
+      //   user,
+      //   tokenMint,
+      //   user.publicKey
+      // );
+
+      console.log("All token accounts created successfully");
+    } catch (error) {
+      console.error("Error creating token accounts:", error);
+      throw error;
+    }
 
     // Mint tokens to authority
-    await mintTo(
-      provider.connection,
-      authority,
-      tokenMint,
-      authorityTokenAccount,
-      authority.publicKey,
-      50000 * 10**6 // 20,000 tokens
-    );
+    // try {
+    //   await mintTo(
+    //     provider.connection,
+    //     authority,
+    //     tokenMint,
+    //     authorityTokenAccount,
+    //     authority.publicKey,
+    //     50000 * 10**6 // 50,000 tokens
+    //   );
 
-    // Mint USD to user for testing purchases
-    await mintTo(
-      provider.connection,
-      authority,
-      usdMint,
-      userUsdAccount,
-      authority.publicKey,
-      5000 * 10**6 // 5,000 USD
-    );
+    //   // Mint USD to user for testing purchases
+    //   await mintTo(
+    //     provider.connection,
+    //     authority,
+    //     usdMint,
+    //     userUsdAccount,
+    //     authority.publicKey,
+    //     5000 * 10**6 // 5,000 USD
+    //   );
+
+    //   console.log("Tokens minted successfully");
+    // } catch (error) {
+    //   console.error("Error minting tokens:", error);
+    //   throw error;
+    // }
 
     // Derive presale PDA with correct seeds
     [presalePda] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -166,14 +263,17 @@ describe("presalee", () => {
     // Get associated token accounts for presale
     presaleTokenAccount = await getAssociatedTokenAddress(tokenMint, presalePda, true);
     presaleUsdAccount = await getAssociatedTokenAddress(usdMint, presalePda, true);
+
+    console.log("Setup completed successfully");
+    console.log("Presale PDA:", presalePda.toBase58());
+    console.log("User Account PDA:", userAccount.toBase58());
   });
 
-
-  // Update test
   it("Initializes presale", async () => {
     try {
       vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda, true);
       vaultUsd = await getAssociatedTokenAddress(usdMint, presalePda, true);
+      
       const tx = await program.methods
         .initPresale(
           seed,
@@ -195,7 +295,7 @@ describe("presalee", () => {
           vaultDog,
           vaultUsd,
           systemProgram: anchor.web3.SystemProgram.programId,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
         })
         .signers([authority])
@@ -227,7 +327,7 @@ describe("presalee", () => {
           adminAta: authorityTokenAccount,
           vaultDog,
           presale: presalePda,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
@@ -301,7 +401,7 @@ describe("presalee", () => {
   });
 
   it("Buys tokens", async () => {
-    const paymentAmount = new anchor.BN(500 * 10**6); // 500 USD
+    const paymentAmount = new anchor.BN(3* 10**6); // 500 USD
     
     try {
       vaultUsd = await getAssociatedTokenAddress(usdMint, presalePda, true);
@@ -317,7 +417,7 @@ describe("presalee", () => {
           user: userAccount,
           systemProgram: anchor.web3.SystemProgram.programId,
           associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([user])
         .rpc();
@@ -331,39 +431,6 @@ describe("presalee", () => {
     } catch (error) {
       console.error("Error buying tokens:", error);
       throw error;
-    }
-  });
-
-  it("Claims tokens", async () => {
-    try {
-      // First, we need to get the user's token account
-      const userTokenATA = await getAssociatedTokenAddress(tokenMint, user.publicKey);
-      vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda, true);
-
-      
-      const tx = await program.methods
-        .claimToken()
-        .accountsPartial({
-          buyer: user.publicKey,
-          usdMint,
-          tokenMintAddress: tokenMint,
-          buyerAta: userTokenATA,
-          vaultDog,
-          presale: presalePda,
-          user: userAccount,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
-          associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([user])
-        .rpc();
-
-      console.log("Claim tokens transaction signature:", tx);
-      
-    } catch (error) {
-      console.error("Error claiming tokens:", error);
-      // This might fail if claiming conditions aren't met, which is expected
-      console.log("This is expected if claiming conditions aren't met");
     }
   });
 
@@ -385,6 +452,38 @@ describe("presalee", () => {
       throw error;
     }
   });
+  
+  it("Claims tokens", async () => {
+    try {
+      // First, we need to get the user's token account
+      const userTokenATA = await getAssociatedTokenAddress(tokenMint, user.publicKey);
+      vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda, true);
+
+      const tx = await program.methods
+        .claimToken()
+        .accountsPartial({
+          buyer: user.publicKey,
+          usdMint,
+          tokenMintAddress: tokenMint,
+          buyerAta: userTokenATA,
+          vaultDog,
+          presale: presalePda,
+          user: userAccount,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([user])
+        .rpc();
+
+      console.log("Claim tokens transaction signature:", tx);
+      
+    } catch (error) {
+      console.error("Error claiming tokens:", error);
+      // This might fail if claiming conditions aren't met, which is expected
+      console.log("This is expected if claiming conditions aren't met");
+    }
+  });
 
   it("Withdraws tokens (authority only)", async () => {
     try {
@@ -398,7 +497,7 @@ describe("presalee", () => {
           adminAta: authorityTokenAccount,
           vaultDog,
           presale: presalePda,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
@@ -426,7 +525,7 @@ describe("presalee", () => {
           adminAta: authorityUsdAccount,
           vaultUsd,
           presale: presalePda,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
@@ -457,7 +556,7 @@ describe("presalee", () => {
           user: userAccount,
           systemProgram: anchor.web3.SystemProgram.programId,
           associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
-          tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([user])
         .rpc();
@@ -470,4 +569,24 @@ describe("presalee", () => {
       console.log("This might fail if refund conditions aren't met");
     }
   });
+
+  it("Close presale (authority only)", async () => {
+    try {
+      const tx = await program.methods
+        .closePresale()
+        .accountsPartial({
+          admin: authority.publicKey,
+          presale: presalePda,
+        })
+        .signers([authority])
+        .rpc();
+
+      console.log("Close presale transaction signature:", tx);
+      
+    } catch (error) {
+      console.error("Error ending presale:", error);
+      throw error;
+    }
+  });
+  
 });

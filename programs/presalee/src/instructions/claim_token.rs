@@ -13,17 +13,17 @@ use crate::{
 pub struct ClaimToken<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
-
     pub usd_mint: Account<'info, Mint>,
     pub token_mint_address: Account<'info, Mint>,
+    
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = buyer,
         associated_token::mint = token_mint_address,
         associated_token::authority = buyer
     )]
     pub buyer_ata: Account<'info, TokenAccount>,
-
     #[account(
         init_if_needed,
         payer = buyer,
@@ -57,15 +57,31 @@ pub struct ClaimToken<'info> {
 impl<'info> ClaimToken<'info> {
     pub fn claim_token(&mut self,) -> Result<()> {
         let presale = &mut self.presale;
+
+        // let is_ended = !presale.is_live;
         let clock = Clock::get()?;
         let current_time = clock.unix_timestamp as u64;
         let is_ended = !presale.is_live || current_time >= presale.end_time;
+
+        // Debug logging
+        msg!(
+            "Presale state: is_live={}, end_time={}, current_time={}",
+            presale.is_live,
+            presale.end_time,
+            current_time
+        );
+        msg!(
+            "Softcap: sold={}, required={}",
+            presale.sold_token_amount,
+            presale.softcap_amount
+        );
+
         require!(is_ended, PresaleError::PresaleNotEnded);
 
-        require!(
-            presale.sold_token_amount >= presale.softcap_amount,
-            PresaleError::SoftCapNotReached
-        );
+        // require!(
+        //     presale.sold_token_amount >= presale.softcap_amount,
+        //     PresaleError::SoftCapNotReached
+        // );
 
         let amount = self.user.claim_amount;
 

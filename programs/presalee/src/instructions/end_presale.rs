@@ -19,10 +19,13 @@ pub struct EndPresale<'info>{
 
 impl<'info> EndPresale<'info>{
     pub fn end_presale(&mut self,) -> Result<()>{
-    //checks if presale is live
-    require!(self.presale.is_live, PresaleError::PresaleEnded);
-    //end presale
-    self.presale.is_live = false;
-    Ok(())
+        let presale = &mut self.presale;
+        let clock = Clock::get()?;
+        let current_time = clock.unix_timestamp as u64;
+        //checks if presale is live
+        require!(presale.is_live || current_time >= presale.end_time, PresaleError::PresaleEnded);
+        //end presale
+        self.presale.is_live = false;
+        Ok(())
     }
 }
