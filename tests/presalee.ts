@@ -46,7 +46,7 @@ describe("presalee", () => {
   // 998425000
   
   // Test parameters
-  const seed = new anchor.BN(56432);
+  const seed = new anchor.BN(56446);
   const seedBytes = seed.toArrayLike(Buffer, 'le', 8);
   const softcapAmount = new anchor.BN(1000 * 10**6); // 1000 tokens (6 decimals)
   const hardcapAmount = new anchor.BN(10000 * 10**6); // 10000 tokens
@@ -57,13 +57,13 @@ describe("presalee", () => {
   
   // Define presale levels (example tier structure)
   const levels = [
-    { tokenAmount: new anchor.BN(5000000 * 10**6), price: new anchor.BN(10000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-    { tokenAmount: new anchor.BN(10000000 * 10**6), price: new anchor.BN(20000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-    { tokenAmount: new anchor.BN(25000000 * 10**6), price: new anchor.BN(30000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-    { tokenAmount: new anchor.BN(66000000 * 10**6), price: new anchor.BN(45000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-    { tokenAmount: new anchor.BN(62000000 * 10**6), price: new anchor.BN(55000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-    { tokenAmount: new anchor.BN(22000000 * 10**6), price: new anchor.BN(65000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
-    { tokenAmount: new anchor.BN(5000000), price: new anchor.BN(75000), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(5000000 * 10**6), price: new anchor.BN(1 * 10**4), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(10000000 * 10**6), price: new anchor.BN(2 * 10**4), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(25000000 * 10**6), price: new anchor.BN(3 * 10**4), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(66000000 * 10**6), price: new anchor.BN(4.5 * 10**4), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(62000000 * 10**6), price: new anchor.BN(5.5 * 10**4), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(22000000 * 10**6), price: new anchor.BN(6.5 * 10**4), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
+    { tokenAmount: new anchor.BN(5000000), price: new anchor.BN(7.5 * 10**4), softCap: new anchor.BN(0), tokensSold: new anchor.BN(0) },
   ];
 
   before(async () => {
@@ -401,7 +401,7 @@ describe("presalee", () => {
   });
 
   it("Buys tokens", async () => {
-    const paymentAmount = new anchor.BN(3* 10**6); // 500 USD
+    const paymentAmount = new anchor.BN(40 * 10**6); // 500 USD
     
     try {
       vaultUsd = await getAssociatedTokenAddress(usdMint, presalePda, true);
@@ -477,6 +477,10 @@ describe("presalee", () => {
         .rpc();
 
       console.log("Claim tokens transaction signature:", tx);
+
+      const userTokenBalance = await provider.connection.getTokenAccountBalance(userTokenAccount);
+      console.log("User DGX balance:", userTokenBalance.value.uiAmount); // Should show 500 for 5 USD
+      expect(userTokenBalance.value.uiAmount).to.equal(500);
       
     } catch (error) {
       console.error("Error claiming tokens:", error);
@@ -577,6 +581,7 @@ describe("presalee", () => {
         .accountsPartial({
           admin: authority.publicKey,
           presale: presalePda,
+          systemProgram: anchor.web3.SystemProgram.programId
         })
         .signers([authority])
         .rpc();

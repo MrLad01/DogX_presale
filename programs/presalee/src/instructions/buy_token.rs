@@ -52,36 +52,38 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
 
  impl <'info> BuyToken <'info> {
     pub fn buy_tokens(&mut self, payment: u64) -> Result<()> {
-        let presale = &mut self.presale;
         let clock = Clock::get()?;
         let current_time = clock.unix_timestamp as u64;
         
-        require!(presale.is_live, PresaleError::PresaleNotStarted);
-        require!(current_time < presale.end_time, PresaleError::PresaleEnded);
+        require!(self.presale.is_live, PresaleError::PresaleNotStarted);
+        require!(current_time < self.presale.end_time, PresaleError::PresaleEnded);
 
         let mut remaining_payment = payment;
-        let mut total_tokens_bought = 0u64;
+        let mut total_tokens_bought = 0 as u64;
 
         // Continue buying until payment is exhausted or all levels are sold out
-        while remaining_payment > 0 && (presale.current_level as usize) < presale.levels.len() {
-            let current_level_index = presale.current_level as usize;
-            let current_level = &mut presale.levels[current_level_index];
+        while remaining_payment > 0 && (self.presale.current_level as usize) < self.presale.levels.len() {
+            let current_level_index = self.presale.current_level as usize;
             
-            let tokens_remaining_in_level = current_level.token_amount - current_level.tokens_sold;
+            // Read current level data
+            let level_token_amount = self.presale.levels[current_level_index].token_amount;
+            let level_tokens_sold = self.presale.levels[current_level_index].tokens_sold;
+            let level_price = self.presale.levels[current_level_index].price;
+            let tokens_remaining_in_level = level_token_amount - level_tokens_sold;
             
             msg!(
                 "Level {} status: total_tokens={}, sold={}, remaining={}, price={}",
                 current_level_index,
-                current_level.token_amount,
-                current_level.tokens_sold,
+                level_token_amount,
+                level_tokens_sold,
                 tokens_remaining_in_level,
-                current_level.price
+                level_price
             );
             
             // If current level is exhausted, move to next level
             if tokens_remaining_in_level == 0 {
                 msg!("Level {} exhausted, moving to next level", current_level_index);
-                presale.current_level += 1;
+                self.presale.current_level += 1;
                 continue;
             }
 
@@ -89,7 +91,7 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
             // Formula: tokens = (payment * 10^6) / price  (assuming 6 decimals for tokens)
             let tokens_can_afford = remaining_payment
                 .checked_mul(1_000_000) // Scale up payment (6 decimals)
-                .and_then(|x| x.checked_div(current_level.price))
+                .and_then(|x| x.checked_div(level_price))
                 .ok_or(PresaleError::CalculationOverflow)?;
             
             // Take minimum of what can be afforded and what's available in this level
@@ -97,7 +99,7 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
             
             // Calculate exact cost for these tokens
             let cost_for_tokens = tokens_to_buy
-                .checked_mul(current_level.price)
+                .checked_mul(level_price)
                 .and_then(|x| x.checked_div(1_000_000))
                 .ok_or(PresaleError::CalculationOverflow)?;
 
@@ -111,42 +113,43 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
 
             // Verify we don't exceed hardcap
             require!(
-                (presale.sold_token_amount + tokens_to_buy) <= presale.hardcap_amount,
+                (self.presale.sold_token_amount + tokens_to_buy) <= self.presale.hardcap_amount,
                 PresaleError::HardCapped
             );
 
             // Verify we don't exceed deposited tokens
             require!(
-                (presale.sold_token_amount + tokens_to_buy) <= presale.deposit_token_amount,
+                (self.presale.sold_token_amount + tokens_to_buy) <= self.presale.deposit_token_amount,
                 PresaleError::ExceedsDepositAmount
             );
 
             // Update the current level and presale state
-            current_level.tokens_sold += tokens_to_buy;
-            presale.sold_token_amount += tokens_to_buy;
+            self.presale.levels[current_level_index].tokens_sold += tokens_to_buy;
+            self.presale.sold_token_amount += tokens_to_buy;
             total_tokens_bought += tokens_to_buy;
+
             remaining_payment -= cost_for_tokens;
 
             // Update presale flags
-            presale.is_soft_capped = presale.sold_token_amount >= presale.softcap_amount;
-            presale.is_hard_capped = presale.sold_token_amount >= presale.hardcap_amount;
+            self.presale.is_soft_capped = self.presale.sold_token_amount >= self.presale.softcap_amount;
+            self.presale.is_hard_capped = self.presale.sold_token_amount >= self.presale.hardcap_amount;
 
             msg!(
                 "After purchase: level_tokens_sold={}, total_sold={}, tokens_bought_this_tx={}, remaining_payment={}",
-                current_level.tokens_sold,
-                presale.sold_token_amount,
+                self.presale.levels[current_level_index].tokens_sold,
+                self.presale.sold_token_amount,
                 total_tokens_bought,
                 remaining_payment
             );
 
             // If current level is now exhausted, move to next level for next iteration
-            if current_level.tokens_sold >= current_level.token_amount {
+            if self.presale.levels[current_level_index].tokens_sold >= level_token_amount {
                 msg!("Level {} completed, moving to next level", current_level_index);
-                presale.current_level += 1;
+                self.presale.current_level += 1;
             }
 
             // If we've hit hardcap, break out of loop
-            if presale.is_hard_capped {
+            if self.presale.is_hard_capped {
                 break;
             }
         }
@@ -154,7 +157,7 @@ use crate::{errors::PresaleError, state::{Presale, UserInfo}};
         // Check if we couldn't spend all the payment (this might be acceptable if hardcap reached)
         if remaining_payment > 0 {
             // If hardcap is reached, this is acceptable
-            if !presale.is_hard_capped {
+            if !self.presale.is_hard_capped {
                 msg!("Payment remaining: {} (all levels exhausted or insufficient tokens)", remaining_payment);
                 return Err(PresaleError::ExactPaymentRequired.into());
             }

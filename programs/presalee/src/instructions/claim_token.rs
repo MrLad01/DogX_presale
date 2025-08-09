@@ -83,7 +83,8 @@ impl<'info> ClaimToken<'info> {
         //     PresaleError::SoftCapNotReached
         // );
 
-        let amount = self.user.claim_amount;
+        // let amount = self.user.claim_amount;
+        let amount = self.user.buy_token_amount;
 
         require!(!self.user.has_claimed_token, PresaleError::AlreadyClaimed);
 

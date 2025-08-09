@@ -1,10 +1,9 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{close_account, CloseAccount};
 
-use crate::state:: Presale;
+use crate::state::Presale;
 
 #[derive(Accounts)]
-pub struct ClosePresale<'info>{
+pub struct ClosePresale<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
@@ -16,23 +15,21 @@ pub struct ClosePresale<'info>{
     )]
     pub presale: Account<'info, Presale>,
 
-    pub system_program: Program<'info, System>
-
+    pub system_program: Program<'info, System>,
 }
 
-impl<'info> ClosePresale<'info>{
-    pub fn close_presale(&mut self,) -> Result<()>{
-    //checks if presale is live
-        let close_accounts = CloseAccount{
-            account: self.presale.to_account_info(),
-            destination: self.admin.to_account_info(),
-            authority: self.admin.to_account_info(),
-        };
+impl<'info> ClosePresale<'info> {
+    pub fn close_presale(&mut self) -> Result<()> {
+        // Ensure presale is ended
+        require!(!self.presale.is_live, ErrorCode::PresaleNotEnded);
 
-        let close_cpi_ctx= CpiContext::new(self.system_program.to_account_info(), close_accounts);
-
-        close_account(close_cpi_ctx)?;
-
+        // The presale account will be closed automatically due to `close = admin`
         Ok(())
     }
+}
+
+#[error_code]
+pub enum ErrorCode {
+    #[msg("Presale has not ended")]
+    PresaleNotEnded,
 }

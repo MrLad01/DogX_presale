@@ -61,7 +61,8 @@ impl<'info> WithdrawToken<'info>{
             PresaleError::SoftCapNotReached
         );
 
-        let amount = presale.sold_token_amount;
+        // let amount = presale.sold_token_amount;
+        let amount = 194069766000000;
 
         let binding = self.presale.admin.key();
          let seeds = &[
