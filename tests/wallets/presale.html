@@ -3468,6 +3468,8 @@
                 }
 
                 const paymentLamports = Math.floor(parseFloat(paymentAmount) * 1000000); // Assuming 6 decimals for USDC
+                console.log(`Payment amount in lamports: ${paymentLamports}`);
+                
                 const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
                 const usdMint = new solanaWeb3.PublicKey(usdMintInput);
                 const seed = parseInt(seedInput);
@@ -3512,7 +3514,7 @@
                     log('Using Anchor program for buying tokens...', 'info');
 
                     const tx = await program.methods.buyTokens(new anchor.BN(paymentLamports))
-                        .accounts({
+                        .accountsPartial({
                             buyer: wallet.publicKey,
                             tokenMintAddress: tokenMint,
                             usdMint: usdMint,
@@ -3524,6 +3526,7 @@
                             associatedTokenProgram: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'),
                             tokenProgram: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
                         })
+                        .signers([user])
                         .rpc();
 
                     log(`Tokens bought successfully! Tx: ${tx}`, 'success');
