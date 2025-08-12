@@ -210,7 +210,7 @@
         const NETWORK = 'devnet'; // Change to 'mainnet-beta' for mainnet
 
         // Your complete IDL
-        const IDL = {
+        const IDL ={
   "address": "B2sYczbsC9WPbxJHLK1cQDQ48NnFjCpv42styrjv9PdS",
   "metadata": {
     "name": "presalee",
@@ -2731,7 +2731,7 @@
     }
   ]
 }
-        // Utility functions
+// Utility functions
         function log(message, type = 'info') {
             const statusLog = document.getElementById('statusLog');
             const timestamp = new Date().toLocaleTimeString();
@@ -3941,110 +3941,155 @@
 
         // Withdraw Tokens: Allows the admin to withdraw unsold tokens from the presale vault
         async function withdrawTokens() {
-            const button = document.getElementById('withdrawTokens');
-            button.disabled = true;
-            button.textContent = 'Withdrawing...';
+    const button = document.getElementById('withdrawTokens');
+    button.disabled = true;
+    button.textContent = 'Withdrawing...';
 
-            try {
-                if (!wallet || !connection) {
-                    throw new Error('Please connect your wallet first');
-                }
-
-                log('Withdrawing tokens...');
-
-                const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
-                const usdMintInput = document.getElementById('usdMintAddress').value.trim();
-                const seedInput = document.getElementById('presaleSeed').value;
-
-                if (!tokenMintInput || !usdMintInput || !seedInput) {
-                    throw new Error('Please provide token mint, USD mint addresses, and seed');
-                }
-
-                const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
-                const usdMint = new solanaWeb3.PublicKey(usdMintInput);
-                const seed = parseInt(seedInput);
-
-                // Derive PDAs
-                const seedBuffer = new Uint8Array(8);
-                const dataView = new DataView(seedBuffer.buffer);
-                dataView.setBigUint64(0, BigInt(seed), true);
-
-                const presalePda = findProgramAddress([
-                    new TextEncoder().encode('dogx_presale'),
-                    wallet.publicKey.toBuffer(),
-                    seedBuffer
-                ], PROGRAM_ID);
-
-                if (!presalePda) {
-                    throw new Error('Failed to derive presale PDA');
-                }
-
-                const adminAta = await getAssociatedTokenAddress(tokenMint, wallet.publicKey);
-                const vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda.pda, true);
-
-                const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
-                if (!presaleAccountInfo) {
-                    throw new Error('Presale account not found. Please initialize the presale first.');
-                }
-
-                if (program) {
-                    log('Using Anchor program for withdrawing tokens...', 'info');
-                    const tx = await program.methods.withdrawToken()
-                        .accounts({
-                            admin: wallet.publicKey,
-                            usdMint: usdMint,
-                            tokenMintAddress: tokenMint,
-                            adminAta: adminAta,
-                            vaultDog: vaultDog,
-                            presale: presalePda.pda,
-                            tokenProgram: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
-                            associatedTokenProgram: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'),
-                            systemProgram: solanaWeb3.SystemProgram.programId,
-                        })
-                        .rpc({ commitment: 'confirmed' });
-                    log(`Tokens withdrawn successfully! Tx: ${tx}`, 'success');
-                } else {
-                    log('Using manual transaction building for withdraw tokens...', 'warning');
-                    const instructionData = new Uint8Array([136, 235, 181, 5, 101, 109, 57, 81]); // withdraw_token discriminator
-                    const instruction = new solanaWeb3.TransactionInstruction({
-                        keys: [
-                            { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
-                            { pubkey: usdMint, isSigner: false, isWritable: false },
-                            { pubkey: tokenMint, isSigner: false, isWritable: false },
-                            { pubkey: adminAta, isSigner: false, isWritable: true },
-                            { pubkey: vaultDog, isSigner: false, isWritable: true },
-                            { pubkey: presalePda.pda, isSigner: false, isWritable: true },
-                            { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
-                            { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
-                            { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
-                        ],
-                        programId: new solanaWeb3.PublicKey(PROGRAM_ID),
-                        data: instructionData
-                    });
-
-                    const transaction = new solanaWeb3.Transaction().add(instruction);
-                    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-                    transaction.recentBlockhash = blockhash;
-                    transaction.feePayer = wallet.publicKey;
-
-                    const signedTransaction = await wallet.signTransaction(transaction);
-                    const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-                        skipPreflight: false,
-                        maxRetries: 0
-                    });
-                    await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
-                    log(`Tokens withdrawn successfully! Tx: ${signature}`, 'success');
-                }
-
-            } catch (error) {
-                log(`Failed to withdraw tokens: ${error.message}`, 'error');
-                console.error('Full error:', error);
-            } finally {
-                button.disabled = false;
-                button.textContent = 'Withdraw Tokens';
-            }
+    try {
+        if (!wallet || !connection) {
+            throw new Error('Please connect your wallet first');
         }
 
+        // Check SOL balance first
+        const balance = await connection.getBalance(wallet.publicKey);
+        if (balance < 5000000) { // 0.005 SOL minimum
+            throw new Error('Insufficient SOL balance for transaction fees. Please add SOL to your wallet.');
+        }
+
+        log('Withdrawing tokens...');
+
+        const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
+        const usdMintInput = document.getElementById('usdMintAddress').value.trim();
+        const seedInput = document.getElementById('presaleSeed').value;
+
+        if (!tokenMintInput || !usdMintInput || !seedInput) {
+            throw new Error('Please provide token mint, USD mint addresses, and seed');
+        }
+
+        const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
+        const usdMint = new solanaWeb3.PublicKey(usdMintInput);
+        const seed = parseInt(seedInput);
+
+        // Derive PDAs
+        const seedBuffer = new Uint8Array(8);
+        const dataView = new DataView(seedBuffer.buffer);
+        dataView.setBigUint64(0, BigInt(seed), true);
+
+        const presalePda = findProgramAddress([
+            new TextEncoder().encode('dogx_presale'),
+            wallet.publicKey.toBuffer(),
+            seedBuffer
+        ], PROGRAM_ID);
+
+        if (!presalePda) {
+            throw new Error('Failed to derive presale PDA');
+        }
+
+        // Check if presale account exists
+        const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+        if (!presaleAccountInfo) {
+            throw new Error('Presale account not found. Please initialize the presale first.');
+        }
+
+        // Get or create admin ATA
+        const adminAta = await getAssociatedTokenAddress(tokenMint, wallet.publicKey);
+        const vaultDog = await getAssociatedTokenAddress(tokenMint, presalePda.pda, true);
+
+        // Check if admin ATA exists, create if needed
+        const adminAtaInfo = await connection.getAccountInfo(adminAta);
+        if (!adminAtaInfo) {
+            log('Creating admin token account...', 'info');
+            // You might need to create this account first
+            throw new Error('Admin token account does not exist. Please create it first.');
+        }
+
+        // Check vault has tokens to withdraw
+        const vaultInfo = await connection.getAccountInfo(vaultDog);
+        if (!vaultInfo) {
+            throw new Error('Vault token account does not exist');
+        }
+
+        if (program) {
+            log('Using Anchor program for withdrawing tokens...', 'info');
+            
+            // Use accountsPartial like in your test file
+            const tx = await program.methods.withdrawToken()
+                .accountsPartial({
+                    admin: wallet.publicKey,
+                    usdMint: usdMint,
+                    tokenMintAddress: tokenMint,
+                    adminAta: adminAta,
+                    vaultDog: vaultDog,
+                    presale: presalePda.pda,
+                    tokenProgram: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+                    associatedTokenProgram: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'),
+                    systemProgram: solanaWeb3.SystemProgram.programId,
+                })
+                .rpc({ 
+                    commitment: 'confirmed',
+                    skipPreflight: false 
+                });
+                
+            log(`Tokens withdrawn successfully! Tx: ${tx}`, 'success');
+            
+        } else {
+            log('Using manual transaction building for withdraw tokens...', 'warning');
+            
+            const instructionData = new Uint8Array([136, 235, 181, 5, 101, 109, 57, 81]); // withdraw_token discriminator
+            
+            const instruction = new solanaWeb3.TransactionInstruction({
+                keys: [
+                    { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+                    { pubkey: usdMint, isSigner: false, isWritable: false },
+                    { pubkey: tokenMint, isSigner: false, isWritable: false },
+                    { pubkey: adminAta, isSigner: false, isWritable: true },
+                    { pubkey: vaultDog, isSigner: false, isWritable: true },
+                    { pubkey: presalePda.pda, isSigner: false, isWritable: true },
+                    { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false },
+                    { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false },
+                    { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+                ],
+                programId: new solanaWeb3.PublicKey(PROGRAM_ID),
+                data: instructionData
+            });
+
+            const transaction = new solanaWeb3.Transaction().add(instruction);
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+            transaction.recentBlockhash = blockhash;
+            transaction.feePayer = wallet.publicKey;
+
+            const signedTransaction = await wallet.signTransaction(transaction);
+            const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                skipPreflight: false,
+                maxRetries: 3
+            });
+            
+            await connection.confirmTransaction({ 
+                signature, 
+                blockhash, 
+                lastValidBlockHeight 
+            }, 'confirmed');
+            
+            log(`Tokens withdrawn successfully! Tx: ${signature}`, 'success');
+        }
+
+    } catch (error) {
+        log(`Failed to withdraw tokens: ${error.message}`, 'error');
+        console.error('Full error:', error);
+        
+        // More specific error handling
+        if (error.message.includes('0x1')) {
+            log('Program error: Check if presale conditions allow withdrawal (e.g., presale ended, sufficient permissions)', 'error');
+        }
+        if (error.message.includes('insufficient funds')) {
+            log('Add SOL to your wallet for transaction fees', 'error');
+        }
+        
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Withdraw Tokens';
+    }
+}
         // Withdraw USD: Allows the admin to withdraw collected USDC from the presale
         async function withdrawUsd() {
             const button = document.getElementById('withdrawUsd');
@@ -4152,11 +4197,149 @@
         }
 
 
-        async function claimRefund() {
-            log('🚧 Claim refund function - needs implementation', 'warning');
+       async function claimRefund() {
+    const button = document.getElementById('claimRefund');
+    if (!button) {
+        log('Button element not found', 'error');
+        return;
+    }
+    button.disabled = true;
+    button.textContent = 'Claiming Refund...';
+
+    try {
+        if (!wallet || !connection) {
+            throw new Error('Please connect your wallet first');
         }
 
-        // Event listeners
+        log('Attempting to claim refund...');
+
+        const tokenMintInput = document.getElementById('tokenMintAddress').value.trim();
+        const usdMintInput = document.getElementById('usdMintAddress').value.trim();
+        const seedInput = document.getElementById('presaleSeed').value;
+
+        if (!tokenMintInput || !usdMintInput || !seedInput) {
+            throw new Error('Please provide token mint, USD mint addresses, and seed');
+        }
+
+        const tokenMint = new solanaWeb3.PublicKey(tokenMintInput);
+        const usdMint = new solanaWeb3.PublicKey(usdMintInput);
+        const seed = parseInt(seedInput);
+
+        // Derive PDAs
+        const seedBuffer = new Uint8Array(8);
+        const dataView = new DataView(seedBuffer.buffer);
+        dataView.setBigUint64(0, BigInt(seed), true);
+
+        const presalePda = findProgramAddress([
+            new TextEncoder().encode('dogx_presale'),
+            wallet.publicKey.toBuffer(),
+            seedBuffer
+        ], PROGRAM_ID);
+
+        if (!presalePda) {
+            throw new Error('Failed to derive presale PDA');
+        }
+
+        const userPda = findProgramAddress([
+            new TextEncoder().encode('user'),
+            presalePda.pda.toBuffer(),
+            wallet.publicKey.toBuffer()
+        ], PROGRAM_ID);
+
+        const buyerAta = await getAssociatedTokenAddress(usdMint, wallet.publicKey);
+        const vaultUsd = await getAssociatedTokenAddress(usdMint, presalePda.pda, true);
+
+        // Check presale account state
+        const presaleAccountInfo = await connection.getAccountInfo(presalePda.pda);
+        if (!presaleAccountInfo) {
+            throw new Error('Presale account not found. Please initialize the presale first.');
+        }
+
+        const presaleData = await (program ? program.account.presale.fetch(presalePda.pda) : null);
+        if (!presaleData) {
+            throw new Error('Failed to fetch presale data');
+        }
+        const clock = await connection.getSlot();
+        const currentTime = (await connection.getBlockTime(clock)) || Math.floor(Date.now() / 1000);
+        if (presaleData.is_live && currentTime < presaleData.end_time) {
+            throw new Error('Presale has not ended yet');
+        }
+        if (presaleData.sold_token_amount >= presaleData.softcap_amount) {
+            throw new Error('Soft cap has been reached, no refund available');
+        }
+
+        // Check user account
+        const userData = await (program ? program.account.userInfo.fetch(userPda.pda) : null);
+        if (!userData || userData.has_claimed_refund) {
+            throw new Error('Refund already claimed or user data unavailable');
+        }
+
+        if (program) {
+            log('Using Anchor program for claiming refund...', 'info');
+
+            const tx = await program.methods.refund()
+                .accounts({
+                    buyer: wallet.publicKey,
+                    tokenMintAddress: tokenMint,
+                    usdMint: usdMint,
+                    presale: presalePda.pda,
+                    buyerAta: buyerAta,
+                    vaultUsd: vaultUsd,
+                    user: userPda.pda,
+                    systemProgram: solanaWeb3.SystemProgram.programId,
+                    associatedTokenProgram: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'),
+                    tokenProgram: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+                })
+                .signers([])
+                .rpc();
+
+            log(`Refund claimed successfully! Tx: ${tx}`, 'success');
+        } else {
+            log('Using manual transaction building for claim refund...', 'warning');
+
+            // Define the refund discriminator (example, adjust based on your program's IDL)
+            const instructionData = new Uint8Array([2, 96, 183, 251, 63, 208, 46, 46]); // Placeholder, replace with actual discriminator
+
+            const instruction = new solanaWeb3.TransactionInstruction({
+                keys: [
+                    { pubkey: wallet.publicKey, isSigner: true, isWritable: true }, // buyer
+                    { pubkey: presalePda.pda, isSigner: false, isWritable: true }, // presale
+                    { pubkey: tokenMint, isSigner: false, isWritable: false }, // token_mint_address
+                    { pubkey: usdMint, isSigner: false, isWritable: false }, // usd_mint
+                    { pubkey: buyerAta, isSigner: false, isWritable: true }, // buyer_ata
+                    { pubkey: vaultUsd, isSigner: false, isWritable: true }, // vault_usd
+                    { pubkey: userPda.pda, isSigner: false, isWritable: true }, // user
+                    { pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false }, // system_program
+                    { pubkey: new solanaWeb3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'), isSigner: false, isWritable: false }, // associated_token_program
+                    { pubkey: new solanaWeb3.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'), isSigner: false, isWritable: false }, // token_program
+                ],
+                programId: new solanaWeb3.PublicKey(PROGRAM_ID),
+                data: instructionData
+            });
+
+            const transaction = new solanaWeb3.Transaction().add(instruction);
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+            transaction.recentBlockhash = blockhash;
+            transaction.feePayer = wallet.publicKey;
+
+            const signedTransaction = await wallet.signTransaction(transaction);
+            const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                skipPreflight: false,
+                maxRetries: 0
+            });
+            await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
+            log(`Refund claimed successfully! Tx: ${signature}`, 'success');
+        }
+
+    } catch (error) {
+        log(`Failed to claim refund: ${error.message}`, 'error');
+        console.error('Full error:', error);
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Claim Refund';
+    }
+}
+        // Event listeners 
         document.getElementById('connectWallet').addEventListener('click', connectWallet);
         document.getElementById('disconnectWallet').addEventListener('click', disconnectWallet);
         document.getElementById('initPresale').addEventListener('click', initializePresale);

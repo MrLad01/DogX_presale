@@ -60,7 +60,7 @@ impl<'info> WithdrawUsd<'info>{
             PresaleError::SoftCapNotReached
         );
 
-        let amount = presale.sold_token_amount;
+        let amount = self.vault_usd.amount;
 
         let binding = self.presale.admin.key();
          let seeds = &[

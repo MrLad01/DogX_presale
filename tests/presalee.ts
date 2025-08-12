@@ -46,7 +46,7 @@ describe("presalee", () => {
   // 998425000
   
   // Test parameters
-  const seed = new anchor.BN(56899);
+  const seed = new anchor.BN(569);
   const seedBytes = seed.toArrayLike(Buffer, 'le', 8);
   const softcapAmount = new anchor.BN(1000 * 10**6); // 1000 tokens (6 decimals)
   const hardcapAmount = new anchor.BN(10000 * 10**6); // 10000 tokens

@@ -25,8 +25,7 @@ pub struct WithdrawToken<'info> {
     pub admin_ata: Account<'info, TokenAccount>,
 
     #[account(
-        init_if_needed,
-        payer = admin,
+        mut,
         associated_token::mint = token_mint_address,
         associated_token::authority = presale
     )]
@@ -62,7 +61,7 @@ impl<'info> WithdrawToken<'info>{
         );
 
         // let amount = presale.sold_token_amount;
-        let amount = 194069766000000;
+        let amount = self.vault_dog.amount;
 
         let binding = self.presale.admin.key();
          let seeds = &[
@@ -86,7 +85,7 @@ impl<'info> WithdrawToken<'info>{
             signers_seeds,
         ),
         amount,
-        self.usd_mint.decimals
+        self.token_mint_address.decimals
     )?;
         Ok(())
     }
