@@ -46,7 +46,7 @@ describe("presalee", () => {
   // 998425000
   
   // Test parameters
-  const seed = new anchor.BN(56446);
+  const seed = new anchor.BN(56899);
   const seedBytes = seed.toArrayLike(Buffer, 'le', 8);
   const softcapAmount = new anchor.BN(1000 * 10**6); // 1000 tokens (6 decimals)
   const hardcapAmount = new anchor.BN(10000 * 10**6); // 10000 tokens
@@ -117,7 +117,7 @@ describe("presalee", () => {
       //   null,
       //   6 // 6 decimals
       // );
-      tokenMint = new PublicKey("8ME8EAAmLegMSBae3DgN6LPznr6P3xaHAN8Pd7mMbJ3o")
+      tokenMint = new PublicKey("AwnwHVH7pXtRcidsZPFBDUzALX5DJCmHT4UHEn4RPw2n")
       console.log("Token mint created:", tokenMint.toBase58());
 
       // usdMint = await createMint(
@@ -127,7 +127,7 @@ describe("presalee", () => {
       //   null,
       //   6 // 6 decimals (USDC-like)
       // );
-      usdMint = new PublicKey("3MWScP9VFh4BQyWDFj5aR3doz6cSKTB2MRGnJB7vdz6P")
+      usdMint = new PublicKey("5Fj4vZRfxzyfr8Win4T7BUSqKNbZJ9yi2wS7YKNwJyeu")
       console.log("USD mint created:", usdMint.toBase58());
     } catch (error) {
       console.error("Error creating mints:", error);
